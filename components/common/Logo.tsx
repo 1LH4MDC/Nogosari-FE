@@ -1,0 +1,36 @@
+'use client';
+
+import Image from 'next/image';
+import { Shield } from 'lucide-react';
+import { useState } from 'react';
+
+interface LogoProps {
+  className?: string;
+  iconClassName?: string;
+  size?: number;
+}
+
+export default function Logo({ size = 44, className = "h-11 w-11", iconClassName = "h-6 w-6" }: LogoProps) {
+  const [imageError, setImageError] = useState(false);
+
+  if (imageError) {
+    return (
+      <div className={`flex items-center justify-center rounded-xl bg-blue-50 text-blue-600 ${className}`}>
+        <Shield className={`${iconClassName} stroke-[2]`} />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative flex items-center justify-center overflow-hidden rounded-xl bg-blue-50/50 ${className}`}>
+      <Image
+        src="/logo.png"
+        alt="Logo Desa Nogosari"
+        width={size}
+        height={size}
+        className="object-contain"
+        onError={() => setImageError(true)}
+      />
+    </div>
+  );
+}
