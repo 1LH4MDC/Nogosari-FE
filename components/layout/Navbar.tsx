@@ -8,10 +8,10 @@ import Logo from '@/components/common/Logo';
 
 const NAV_LINKS = [
   { name: 'Home', href: '/' },
-  { name: 'Profil Desa', href: '/profil' },
+  { name: 'Profil Destana', href: '/profil' },
   { name: 'Layanan', href: '/layanan' },
   { name: 'Monitoring IoT', href: '/monitoring' },
-  { name: 'Data', href: '#' },
+  { name: 'Data', href: '/data' },
 ];
 
 export default function Navbar() {
