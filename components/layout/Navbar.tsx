@@ -18,12 +18,16 @@ export default function Navbar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/forgot-password');
+  const actionButtonText = isAuthPage ? 'Kembali' : 'Masuk';
+  const actionButtonHref = isAuthPage ? '/' : '/login';
+
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-gray-100 bg-white/90 backdrop-blur-md">
       <div className="container mx-auto flex h-20 items-center justify-between px-4 md:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3.5 group">
-          <Logo size={44} className="h-11 w-11" />
+          <Logo size={44} className="h-11 w-11 shrink-0" />
           <div className="flex flex-col">
             <span className="text-base font-bold leading-tight text-[#1e3a8a]">
               Desa Nogosari Tangguh Bencana
@@ -40,10 +44,11 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 href={link.href}
-                className={`text-sm font-semibold transition-colors ${isActive
-                  ? 'border-b-2 border-blue-600 py-1 text-blue-600'
-                  : 'text-gray-600 hover:text-blue-600'
-                  }`}
+                className={`text-sm font-semibold transition-colors ${
+                  isActive
+                    ? 'border-b-2 border-blue-600 py-1 text-blue-600'
+                    : 'text-gray-600 hover:text-blue-600'
+                }`}
               >
                 {link.name}
               </Link>
@@ -54,10 +59,10 @@ export default function Navbar() {
         {/* Right Section */}
         <div className="hidden items-center md:flex">
           <Link
-            href="#"
+            href={actionButtonHref}
             className="rounded-lg bg-[#1d4ed8] px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-blue-800 hover:shadow-md"
           >
-            Masuk
+            {actionButtonText}
           </Link>
         </div>
 
@@ -80,8 +85,9 @@ export default function Navbar() {
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`text-sm font-semibold ${isActive ? 'text-blue-600' : 'text-gray-600'
-                    }`}
+                  className={`text-sm font-semibold ${
+                    isActive ? 'text-blue-600' : 'text-gray-600'
+                  }`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {link.name}
@@ -89,10 +95,11 @@ export default function Navbar() {
               );
             })}
             <Link
-              href="#"
+              href={actionButtonHref}
               className="inline-flex justify-center rounded-lg bg-[#1d4ed8] px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-blue-800"
+              onClick={() => setIsMobileMenuOpen(false)}
             >
-              Masuk
+              {actionButtonText}
             </Link>
           </div>
         </div>
