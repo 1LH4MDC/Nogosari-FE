@@ -6,21 +6,39 @@ import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import AuthLayout from '@/components/layout/AuthLayout';
 
+import { loginAdmin } from '@/lib/api';
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate login submit & redirect to home or monitoring
-    router.push('/monitoring');
+    setErrorMessage('');
+    setLoading(true);
+    try {
+      await loginAdmin(email, password);
+      router.push('/monitoring');
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Login gagal');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <AuthLayout title="Masuk" subtitle="Sebagai Pengurus Desa">
       <form onSubmit={handleSubmit} className="space-y-4">
+        {errorMessage && (
+          <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
+            {errorMessage}
+          </div>
+        )}
+
         {/* Email Field */}
         <div className="space-y-1.5">
           <label className="text-xs font-bold text-gray-700 block">Email</label>
@@ -69,9 +87,10 @@ export default function LoginPage() {
         {/* CTA Submit Button */}
         <button
           type="submit"
-          className="w-full mt-4 rounded-xl bg-[#1d4ed8] hover:bg-blue-800 text-white font-extrabold py-3.5 text-sm transition-all shadow-xs hover:shadow-md"
+          disabled={loading}
+          className="w-full mt-4 rounded-xl bg-[#1d4ed8] hover:bg-blue-800 disabled:opacity-60 text-white font-extrabold py-3.5 text-sm transition-all shadow-xs hover:shadow-md"
         >
-          Masuk
+          {loading ? 'Memproses...' : 'Masuk'}
         </button>
       </form>
     </AuthLayout>

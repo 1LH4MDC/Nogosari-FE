@@ -22,7 +22,7 @@ export default function AuthLayout({
     <div className="bg-[#f8fafc] min-h-[calc(100vh-80px)] flex flex-col justify-center py-10 sm:py-14 px-4 md:px-8">
       <div className="container mx-auto max-w-6xl">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
-          
+
           {/* ==================================================== */}
           {/* LEFT COLUMN: FORM SECTION (~40% WIDTH) */}
           {/* ==================================================== */}

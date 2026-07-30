@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { Droplet, CheckCircle2, AlertTriangle, XCircle, PhoneCall } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+import { useEffect, useState } from 'react';
+import { getLatestSensorReading } from '@/lib/api';
+
 const emergencyContacts = [
   { name: 'Fiqih - Ketua Destana', phone: '#' },
   { name: 'Hadi - Kasi Pemerintahan', phone: '#' },
@@ -13,6 +16,21 @@ const emergencyContacts = [
 ];
 
 export default function HomePage() {
+  const [sensorData, setSensorData] = useState<{ reading?: number; status_water?: string } | null>(null);
+
+  useEffect(() => {
+    async function loadData() {
+      const data = await getLatestSensorReading();
+      if (data) setSensorData(data);
+    }
+    loadData();
+    const interval = setInterval(loadData, 10000); // Polling every 10 sec
+    return () => clearInterval(interval);
+  }, []);
+
+  const waterLevel = sensorData?.reading !== undefined ? `${sensorData.reading} cm` : '69 cm';
+  const waterStatus = sensorData?.status_water ? sensorData.status_water.toUpperCase() : 'NORMAL';
+
   return (
     <div className="bg-white">
 
@@ -70,11 +88,11 @@ export default function HomePage() {
 
             <div className="flex items-center gap-3 text-emerald-950 font-extrabold">
               <Droplet className="h-7 w-7 fill-current" />
-              <span className="text-2xl sm:text-3xl">69 cm</span>
+              <span className="text-2xl sm:text-3xl">{waterLevel}</span>
             </div>
 
             <span className="text-xl sm:text-2xl font-extrabold text-emerald-950 tracking-wider">
-              NORMAL
+              {waterStatus}
             </span>
           </motion.div>
 

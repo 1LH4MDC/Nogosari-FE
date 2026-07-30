@@ -91,13 +91,12 @@ export default function OtpInput({ length = 6, onComplete, onChange }: OtpInputP
             onChange={(e) => handleChange(e, idx)}
             onKeyDown={(e) => handleKeyDown(e, idx)}
             onPaste={handlePaste}
-            className={`w-full h-14 text-center text-xl font-extrabold rounded-xl border bg-white transition-all outline-none ${
-              activeInput === idx
-                ? 'border-[#1d4ed8] ring-2 ring-blue-100 shadow-sm'
-                : digit
+            className={`w-full h-14 text-center text-xl font-extrabold rounded-xl border bg-white transition-all outline-none ${activeInput === idx
+              ? 'border-[#1d4ed8] ring-2 ring-blue-100 shadow-sm'
+              : digit
                 ? 'border-blue-400 bg-blue-50/30'
                 : 'border-gray-300 hover:border-gray-400'
-            }`}
+              }`}
           />
         </motion.div>
       ))}

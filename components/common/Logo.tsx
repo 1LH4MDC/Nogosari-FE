@@ -22,14 +22,15 @@ export default function Logo({ size = 44, className = "h-11 w-11", iconClassName
   }
 
   return (
-    <div className={`relative flex items-center justify-center overflow-hidden rounded-xl bg-blue-50/50 ${className}`}>
+    <div className={`relative flex items-center justify-center ${className}`}>
       <Image
         src="/logo.png"
         alt="Logo Desa Nogosari"
         width={size}
         height={size}
-        className="object-contain"
+        className="object-contain w-full h-full"
         onError={() => setImageError(true)}
+        priority
       />
     </div>
   );

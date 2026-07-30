@@ -7,8 +7,7 @@ import {
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
-
-// Initial dataset for 24-hour river water monitoring
+import { getLatestSensorReading, getSensorHistory, getSensorDevices } from '@/lib/api';
 const chartData24h = [
   { time: '00:00', level: 0.5 },
   { time: '06:00', level: 1.2 },
@@ -53,22 +52,48 @@ const initialLogs: LogItem[] = [
 export default function MonitoringPage() {
   const [activeTab, setActiveTab] = useState<'1Jam' | '1Hari' | '7Hari'>('1Hari');
   const [waterLevelCm, setWaterLevelCm] = useState(69);
-  const [batteryLevel, setBatteryLevel] = useState(15);
+  const [batteryLevel, setBatteryLevel] = useState(95);
+  const [signalQuality, setSignalQuality] = useState('Kuat (-85dBm)');
   const [isLiveConnected, setIsLiveConnected] = useState(true);
   const [lastUpdated, setLastUpdated] = useState('Hari ini, 14:30 WIB');
+  const [historyData, setHistoryData] = useState<{ time: string; level: number }[]>([]);
 
-  // Simulated WebSocket / Polling stream setup
+  // Fetch real-time API data
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Simulate minor fluctuation in real-time sensor polling
-      const delta = Math.floor(Math.random() * 3) - 1; // -1, 0, +1
-      setWaterLevelCm((prev) => Math.max(50, Math.min(180, prev + delta)));
-    }, 10000);
+    async function fetchData() {
+      try {
+        const latest = await getLatestSensorReading();
+        if (latest) {
+          if (latest.reading !== undefined) setWaterLevelCm(latest.reading);
+          if (latest.battery !== undefined) setBatteryLevel(latest.battery);
+          if (latest.signal) setSignalQuality(latest.signal);
+          if (latest.timestamp) {
+            const timeStr = new Date(latest.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            setLastUpdated(`Hari ini, ${timeStr} WIB`);
+          }
+          setIsLiveConnected(true);
+        }
+        
+        const history = await getSensorHistory(20);
+        if (Array.isArray(history) && history.length > 0) {
+          const formatted = history.map((item: any) => ({
+            time: item.created_at ? new Date(item.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : (item.time || '00:00'),
+            level: (item.water_level || item.reading || 0) / 100, // convert cm to meters for chart
+          })).reverse();
+          setHistoryData(formatted);
+        }
+      } catch (err) {
+        console.error('Error fetching live monitoring data:', err);
+      }
+    }
 
+    fetchData();
+    const interval = setInterval(fetchData, 10000); // 10s polling
     return () => clearInterval(interval);
   }, []);
 
   const getChartData = () => {
+    if (historyData.length > 0) return historyData;
     if (activeTab === '1Jam') return chartData1h;
     if (activeTab === '7Hari') return chartData7d;
     return chartData24h;
