@@ -66,113 +66,101 @@ export default function HomePage() {
 
       {/* Main Content Section */}
       <section className="py-16 sm:py-20 bg-[#f8fafc]">
-        <div className="container mx-auto px-4 md:px-8 max-w-6xl">
+        <div className="container mx-auto px-4 md:px-8 max-w-5xl">
 
-          {/* Section Header */}
-          <div className="text-center mb-10">
+          {/* Section Title */}
+          <div className="text-center mb-8">
             <h2 className="text-2xl sm:text-4xl font-extrabold text-[#1e3a8a] tracking-tight">
-              Informasi Desa Tangguh Bencana
+              Desa Nogosari Tangguh Bencana
             </h2>
           </div>
 
-          {/* Status Water Level Banner */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="w-full bg-[#6ee7b7] rounded-2xl p-5 sm:p-6 mb-8 flex flex-col sm:flex-row items-center justify-between shadow-sm gap-4"
-          >
-            <span className="text-sm sm:text-base font-bold text-emerald-950 uppercase tracking-widest">
-              KETINGGIAN AIR
-            </span>
+          {/* Status Water Level Banner + Button Row */}
+          <div className="flex flex-col md:flex-row items-stretch gap-4 mb-8">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="flex-1 bg-[#6ee7b7] rounded-2xl px-6 py-4 flex items-center justify-between shadow-xs gap-4"
+            >
+              <span className="text-xs sm:text-sm font-extrabold text-emerald-950 uppercase tracking-wider">
+                KETINGGIAN AIR
+              </span>
 
-            <div className="flex items-center gap-3 text-emerald-950 font-extrabold">
-              <Droplet className="h-7 w-7 fill-current" />
-              <span className="text-2xl sm:text-3xl">{waterLevel}</span>
-            </div>
+              <div className="flex items-center gap-2 text-emerald-950 font-extrabold">
+                <Droplet className="h-6 w-6 fill-current" />
+                <span className="text-xl sm:text-2xl">{waterLevel}</span>
+              </div>
 
-            <span className="text-xl sm:text-2xl font-extrabold text-emerald-950 tracking-wider">
-              {waterStatus}
-            </span>
-          </motion.div>
+              <span className="text-base sm:text-lg font-extrabold text-emerald-950 tracking-wider">
+                {waterStatus}
+              </span>
+            </motion.div>
 
-          {/* 3 Grid Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+            <Link
+              href="/monitoring"
+              className="bg-[#1d4ed8] hover:bg-blue-800 text-white font-extrabold text-sm px-6 py-4 rounded-2xl transition-all shadow-xs hover:shadow-md flex items-center justify-center text-center shrink-0"
+            >
+              Lihat Dashboard Monitoring
+            </Link>
+          </div>
+
+          {/* 2 Grid Cards Side-by-Side */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
 
             {/* Card 1: Indikator Ambang Batas */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200/70 shadow-sm flex flex-col justify-between">
-              <h3 className="font-bold text-gray-900 text-lg mb-6">
+            <div className="bg-white rounded-2xl p-6 border border-gray-200/70 shadow-xs flex flex-col justify-between">
+              <h3 className="font-bold text-gray-900 text-base mb-5">
                 Indikator Ambang Batas
               </h3>
 
-              <div className="space-y-3.5">
-                <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-100">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-50/50 border-l-4 border-emerald-600">
                   <div className="flex items-center gap-2.5">
                     <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                    <span className="font-bold text-gray-800 text-sm">Normal</span>
+                    <span className="font-bold text-gray-800 text-xs sm:text-sm">Normal</span>
                   </div>
-                  <span className="font-bold text-gray-700 text-sm">&lt; 2.0 m</span>
+                  <span className="font-bold text-gray-700 text-xs sm:text-sm">&lt; 2.0 m</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3.5 rounded-xl bg-amber-50/60 border border-amber-100">
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-amber-50/50 border-l-4 border-amber-500">
                   <div className="flex items-center gap-2.5">
                     <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
-                    <span className="font-bold text-gray-800 text-sm">Waspada</span>
+                    <span className="font-bold text-gray-800 text-xs sm:text-sm">Waspada</span>
                   </div>
-                  <span className="font-bold text-gray-700 text-sm">2.0 - 3.0 m</span>
+                  <span className="font-bold text-gray-700 text-xs sm:text-sm">2.0 - 3.0 m</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3.5 rounded-xl bg-rose-100/70 border border-rose-200/80">
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-rose-100/70 border-l-4 border-rose-600">
                   <div className="flex items-center gap-2.5">
                     <XCircle className="h-4 w-4 text-rose-700 shrink-0" />
-                    <span className="font-bold text-rose-900 text-sm">Bahaya</span>
+                    <span className="font-bold text-rose-900 text-xs sm:text-sm">Bahaya</span>
                   </div>
-                  <span className="font-bold text-rose-900 text-sm">&gt; 4.0 m</span>
+                  <span className="font-bold text-rose-900 text-xs sm:text-sm">&gt; 4.0 m</span>
                 </div>
               </div>
             </div>
 
             {/* Card 2: Tindak Evakuasi */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200/70 shadow-sm flex flex-col justify-between">
-              <h3 className="font-bold text-gray-900 text-lg mb-6">
+            <div className="bg-white rounded-2xl p-6 border border-gray-200/70 shadow-xs flex flex-col justify-between">
+              <h3 className="font-bold text-gray-900 text-base mb-5">
                 Tindak Evakuasi
               </h3>
 
-              <div className="space-y-3.5">
-                <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-100">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-emerald-50/50 border-l-4 border-emerald-600">
                   <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                  <span className="font-bold text-gray-800 text-sm">Aman</span>
+                  <span className="font-bold text-gray-800 text-xs sm:text-sm">Aman</span>
                 </div>
 
-                <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-amber-50/60 border border-amber-100">
+                <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-amber-50/50 border-l-4 border-amber-500">
                   <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
-                  <span className="font-bold text-gray-800 text-sm">Mulai persiapkan diri</span>
+                  <span className="font-bold text-gray-800 text-xs sm:text-sm">Mulai persiapkan diri</span>
                 </div>
 
-                <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-rose-100/70 border border-rose-200/80">
+                <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-rose-100/70 border-l-4 border-rose-600">
                   <XCircle className="h-4 w-4 text-rose-700 shrink-0" />
-                  <span className="font-bold text-rose-900 text-sm">Segera evakuasi</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 3: Posko Evakuasi */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200/70 shadow-sm flex flex-col justify-between">
-              <h3 className="font-bold text-gray-900 text-lg mb-6">
-                Posko Evakuasi
-              </h3>
-
-              <div className="space-y-3.5">
-                <div className="flex items-center p-3.5 rounded-xl bg-blue-50/60 border-l-4 border-blue-600">
-                  <span className="font-bold text-gray-800 text-sm ml-2">Rumah Reza</span>
-                </div>
-
-                <div className="flex items-center p-3.5 rounded-xl bg-blue-50/60 border-l-4 border-blue-600">
-                  <span className="font-bold text-gray-800 text-sm ml-2">Rumah Ilham</span>
-                </div>
-
-                <div className="flex items-center p-3.5 rounded-xl bg-blue-50/60 border-l-4 border-blue-600">
-                  <span className="font-bold text-gray-800 text-sm ml-2">Rumah Bagas</span>
+                  <span className="font-bold text-rose-900 text-xs sm:text-sm">Segera evakuasi</span>
                 </div>
               </div>
             </div>

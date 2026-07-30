@@ -7,7 +7,7 @@ import { useState } from 'react';
 import Logo from '@/components/common/Logo';
 
 const NAV_LINKS = [
-  { name: 'Home', href: '/' },
+  { name: 'Beranda', href: '/' },
   { name: 'Profil Destana', href: '/profil' },
   { name: 'Layanan', href: '/layanan' },
   { name: 'Monitoring IoT', href: '/monitoring' },
@@ -44,11 +44,10 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 href={link.href}
-                className={`text-sm font-semibold transition-colors ${
-                  isActive
-                    ? 'border-b-2 border-blue-600 py-1 text-blue-600'
-                    : 'text-gray-600 hover:text-blue-600'
-                }`}
+                className={`text-sm font-semibold transition-colors ${isActive
+                  ? 'border-b-2 border-blue-600 py-1 text-blue-600'
+                  : 'text-gray-600 hover:text-blue-600'
+                  }`}
               >
                 {link.name}
               </Link>
@@ -85,9 +84,8 @@ export default function Navbar() {
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`text-sm font-semibold ${
-                    isActive ? 'text-blue-600' : 'text-gray-600'
-                  }`}
+                  className={`text-sm font-semibold ${isActive ? 'text-blue-600' : 'text-gray-600'
+                    }`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {link.name}

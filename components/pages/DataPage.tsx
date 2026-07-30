@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Clock } from 'lucide-react';
 import ProgressBar from '@/components/common/ProgressBar';
 
@@ -67,7 +68,19 @@ const posyanduList: PosyanduData[] = [
   },
 ];
 
+const dusunTabs = [
+  { id: 'ALL', label: 'Semua' },
+  { id: 'KRAJAN', label: 'Dusun Krajan' },
+  { id: 'GUMUK BAGO', label: 'Dusun Gumuk Bago' },
+];
+
 export default function DataPage() {
+  const [selectedDusun, setSelectedDusun] = useState('ALL');
+
+  const filteredList = selectedDusun === 'ALL'
+    ? posyanduList
+    : posyanduList.filter((item) => item.dusun === selectedDusun);
+
   return (
     <div className="bg-[#f4f7fb] min-h-screen py-10 sm:py-14">
       <div className="container mx-auto px-4 md:px-8 max-w-6xl">
@@ -90,7 +103,7 @@ export default function DataPage() {
         </div>
 
         {/* Top Summary Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-10">
 
           {/* Left Card: Total Penduduk */}
           <div className="md:col-span-5 bg-white rounded-2xl p-6 border border-gray-200/70 shadow-sm relative overflow-hidden flex flex-col justify-between">
@@ -144,17 +157,35 @@ export default function DataPage() {
 
         </div>
 
+        {/* Dusun Filter Tabs (Below Total Penduduk Summary) */}
+        <div className="flex flex-wrap items-center gap-3 mb-8">
+          {dusunTabs.map((tab) => {
+            const isActive = selectedDusun === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setSelectedDusun(tab.id)}
+                className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${isActive
+                  ? 'bg-[#1d4ed8] text-white shadow-md'
+                  : 'bg-blue-100/70 hover:bg-blue-200/80 text-[#1e3a8a]'
+                  }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Posyandu Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {posyanduList.map((posyandu, idx) => {
-            const isLastSingle = idx === posyanduList.length - 1 && posyanduList.length % 2 !== 0;
+          {filteredList.map((posyandu, idx) => {
+            const isLastSingle = idx === filteredList.length - 1 && filteredList.length % 2 !== 0;
 
             return (
               <div
                 key={posyandu.name + idx}
-                className={`bg-white rounded-2xl p-6 border border-gray-200/70 shadow-sm ${
-                  isLastSingle ? 'md:col-span-2 md:max-w-xl md:mx-auto w-full' : ''
-                }`}
+                className={`bg-white rounded-2xl p-6 border border-gray-200/70 shadow-sm ${isLastSingle ? 'md:col-span-2 md:max-w-xl md:mx-auto w-full' : ''
+                  }`}
               >
                 <div className="mb-4 pb-2 border-b border-gray-100">
                   <h3 className="font-bold text-gray-900 text-sm tracking-wide uppercase">
