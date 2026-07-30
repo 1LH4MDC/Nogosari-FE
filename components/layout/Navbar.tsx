@@ -24,7 +24,7 @@ export default function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-gray-100 bg-white/90 backdrop-blur-md">
-      <div className="container mx-auto flex h-20 items-center justify-between px-4 md:px-8">
+      <div className="container relative mx-auto flex h-20 items-center justify-between px-4 md:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3.5 group">
           <Logo size={44} className="h-11 w-11 shrink-0" />
@@ -36,8 +36,8 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* Desktop Links */}
-        <div className="hidden items-center gap-8 md:flex">
+        {/* Desktop Links (Centered) */}
+        <div className="hidden items-center gap-8 md:flex md:absolute md:left-1/2 md:-translate-x-1/2">
           {NAV_LINKS.map((link) => {
             const isActive = pathname === link.href;
             return (
