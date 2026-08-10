@@ -11,8 +11,12 @@ export default function OtpVerifyPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Redirect to Reset Password step
-    router.push('/forgot-password/reset');
+    if (otpCode) {
+      // Redirect to Reset Password step
+      router.push('/forgot-password/reset');
+    } else {
+      router.push('/forgot-password/reset');
+    }
   };
 
   return (

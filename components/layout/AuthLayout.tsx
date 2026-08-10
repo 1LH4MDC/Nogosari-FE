@@ -19,7 +19,7 @@ export default function AuthLayout({
   showLogoHeader = true,
 }: AuthLayoutProps) {
   return (
-    <div className="bg-[#f8fafc] min-h-[calc(100vh-80px)] flex flex-col justify-center py-10 sm:py-14 px-4 md:px-8">
+    <div className="bg-white min-h-[calc(100vh-80px)] flex flex-col justify-center py-10 sm:py-14 px-4 md:px-8">
       <div className="container mx-auto max-w-6xl">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
 
@@ -73,16 +73,10 @@ export default function AuthLayout({
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: 'easeOut' }}
-              className="relative rounded-3xl bg-gradient-to-br from-blue-100/90 via-indigo-50/80 to-blue-50/60 p-8 xl:p-10 border border-blue-200/60 shadow-xs overflow-hidden min-h-[540px] flex flex-col justify-between"
+              className="relative rounded-3xl bg-gradient-to-br from-blue-100 via-blue-50/80 to-white p-8 xl:p-10 border border-blue-100 shadow-sm overflow-hidden min-h-[540px] flex flex-col justify-between"
             >
-              {/* Diagonal Line Pattern Background */}
-              <div
-                className="absolute inset-0 opacity-15 pointer-events-none"
-                style={{
-                  backgroundImage:
-                    'repeating-linear-gradient(45deg, #1d4ed8 0, #1d4ed8 1px, transparent 0, transparent 16px)',
-                }}
-              />
+              {/* Subtle Soft Glow Accent */}
+              <div className="absolute -top-20 -left-20 w-80 h-80 bg-blue-200/40 rounded-full blur-3xl pointer-events-none" />
 
               {/* Header Title inside Banner */}
               <div className="relative z-10 space-y-2 mb-6">

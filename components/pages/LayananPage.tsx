@@ -1,9 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import {
-  CheckCircle2, Download, ExternalLink, Leaf, Home, ShieldAlert, Radio, MapPin
+  CheckCircle2, Download, Leaf, Home, ShieldAlert, Radio, MapPin
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 

@@ -1,4 +1,4 @@
-import { History, Target } from 'lucide-react';
+import { History } from 'lucide-react';
 
 export default function ProfilPage() {
   return (
@@ -46,7 +46,7 @@ export default function ProfilPage() {
             <div className="rounded-2xl bg-[#1d4ed8] p-8 text-white shadow-sm">
               <h2 className="text-xl font-bold mb-4">Visi Destana</h2>
               <p className="text-blue-100 text-sm sm:text-base leading-relaxed italic">
-                "Terwujudnya Desa Nogosari yang Mandiri, Sejahtera, dan Berkelanjutan melalui Harmoni Alam dan Teknologi."
+                &quot;Terwujudnya Desa Nogosari yang Mandiri, Sejahtera, dan Berkelanjutan melalui Harmoni Alam dan Teknologi.&quot;
               </p>
             </div>
 
