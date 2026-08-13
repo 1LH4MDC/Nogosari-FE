@@ -12,7 +12,8 @@ import {
   PengaduanPayload,
 } from '@/types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nogosari-be.vercel.app/';
+export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://nogosari-be.vercel.app').replace(/\/$/, '');
+export const SWAGGER_DOCS_URL = `${API_BASE_URL}/api-docs`;
 
 // Helper to get auth header from localStorage
 function getAuthHeaders() {
