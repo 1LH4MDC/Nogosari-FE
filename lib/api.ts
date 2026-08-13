@@ -142,6 +142,16 @@ export async function createPosyandu(payload: { nama_posyandu: string; dusun: st
   return data;
 }
 
+export async function deletePosyandu(id: number) {
+  const res = await fetch(`${API_BASE_URL}/api/posyandu/${id}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || data.error || 'Gagal menghapus data posyandu');
+  return data;
+}
+
 export async function saveBatchRentanBanjir(payload: {
   id_posyandu?: number;
   nama_posyandu?: string;

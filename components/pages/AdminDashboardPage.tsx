@@ -38,6 +38,7 @@ import {
   getPosyanduList,
   getDusunList,
   createPosyandu,
+  deletePosyandu,
   saveBatchRentanBanjir,
   getKategoriList,
   getPengaduanList,
@@ -266,6 +267,25 @@ export default function AdminDashboardPage() {
       setRentanList(prev => prev.filter(r => r.id_rentan !== id));
     } catch (err: unknown) {
       showFeedback('error', err instanceof Error ? err.message : 'Gagal menghapus data');
+    }
+  };
+
+  // --- Handlers: Delete Posyandu ---
+  const handleDeletePosyandu = async (posId: number, posName: string) => {
+    if (!window.confirm(`Apakah Anda yakin ingin menghapus Posyandu "${posName}" beserta seluruh rincian kelompok rentan terkait?`)) {
+      return;
+    }
+    try {
+      await deletePosyandu(posId);
+      showFeedback('success', `Data Posyandu "${posName}" berhasil dihapus!`);
+      const [updatedRentan, updatedPosyandus] = await Promise.all([
+        getRentanBanjirData(),
+        getPosyanduList(),
+      ]);
+      if (updatedRentan) setRentanList(updatedRentan);
+      if (updatedPosyandus) setPosyanduOptions(updatedPosyandus);
+    } catch (err: unknown) {
+      showFeedback('error', err instanceof Error ? err.message : 'Gagal menghapus posyandu');
     }
   };
 
@@ -691,6 +711,14 @@ export default function AdminDashboardPage() {
                                   title="Edit Data Posyandu & Kategori"
                                 >
                                   <Edit2 className="h-4 w-4" />
+                                </button>
+
+                                <button
+                                  onClick={() => handleDeletePosyandu(item.id_posyandu, item.nama_posyandu)}
+                                  className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-flex items-center"
+                                  title="Hapus Posyandu & Data Kelompok Rentan"
+                                >
+                                  <Trash2 className="h-4 w-4" />
                                 </button>
                               </td>
                             </tr>
