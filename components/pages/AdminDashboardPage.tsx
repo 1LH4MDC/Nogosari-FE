@@ -338,17 +338,6 @@ export default function AdminDashboardPage() {
               <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin text-blue-600' : ''}`} />
             </button>
 
-            <a
-              href={SWAGGER_DOCS_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs transition-colors"
-              title="Buka Dokumentasi Swagger API"
-            >
-              <FileText className="h-4 w-4 text-blue-600" />
-              <span className="hidden md:inline">Docs API (Swagger)</span>
-            </a>
-
             <div className="hidden sm:flex items-center gap-2 pl-4 border-l border-gray-200">
               <div className="h-8 w-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">
                 {adminName.substring(0, 2).toUpperCase()}
@@ -510,7 +499,7 @@ export default function AdminDashboardPage() {
             {/* Quick Actions Panel */}
             <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-xs">
               <h3 className="text-base font-extrabold text-gray-900 mb-4">Aksi Cepat Admin</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <button
                   onClick={() => { setActiveTab('rentan'); handleOpenBatchModal(); }}
                   className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-blue-500 hover:bg-blue-50/50 transition-all text-left group"
@@ -549,21 +538,6 @@ export default function AdminDashboardPage() {
                     <p className="text-xs text-gray-500">Atur batas peringatan dini</p>
                   </div>
                 </button>
-
-                <a
-                  href={SWAGGER_DOCS_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-emerald-500 hover:bg-emerald-50/50 transition-all text-left group"
-                >
-                  <div className="p-2.5 rounded-lg bg-emerald-100 text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                    <ExternalLink className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-sm text-gray-900">Dokumentasi API Swagger</p>
-                    <p className="text-xs text-gray-500">Spesifikasi interaktif API</p>
-                  </div>
-                </a>
               </div>
             </div>
           </motion.div>
