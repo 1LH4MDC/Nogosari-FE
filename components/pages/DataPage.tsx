@@ -251,7 +251,7 @@ export default function DataPage() {
                     <div className="mb-4 pb-2 border-b border-gray-100 flex justify-between items-center gap-2">
                       <h3 className="font-extrabold text-gray-900 text-sm tracking-wide uppercase flex items-center gap-1.5 flex-wrap">
                         <span>{posyandu.name}</span>
-                        <span className="text-gray-500 font-semibold normal-case"> - {posyandu.dusun}</span>
+                        <span className="text-gray-600 font-bold normal-case"> - {posyandu.dusun}</span>
                       </h3>
                       <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full shrink-0">
                         {posyandu.totalJiwa} Jiwa
