@@ -370,27 +370,31 @@ export default function AdminDashboardPage() {
     return Array.from(map.values());
   }, [posyanduOptions, rentanList]);
 
-  const filteredGroupedPosyandu = groupedPosyanduList.filter(item => {
+  const filteredGroupedPosyandu = React.useMemo(() => {
     const query = rentanSearch.toLowerCase();
-    if (!query) return true;
-    return (
+    if (!query) return groupedPosyanduList;
+    return groupedPosyanduList.filter(item =>
       item.nama_posyandu.toLowerCase().includes(query) ||
       item.dusun.toLowerCase().includes(query) ||
       String(item.total_jiwa).includes(query) ||
       item.categories.some(c => c.nama_kategori.toLowerCase().includes(query))
     );
-  });
+  }, [groupedPosyanduList, rentanSearch]);
 
-  const filteredPengaduan = pengaduanList.filter(item => {
+  const filteredPengaduan = React.useMemo(() => {
     const query = pengaduanSearch.toLowerCase();
-    return (
+    if (!query) return pengaduanList;
+    return pengaduanList.filter(item =>
       item.nama_pengirim.toLowerCase().includes(query) ||
       item.kontak.toLowerCase().includes(query) ||
       item.isi_pengaduan.toLowerCase().includes(query)
     );
-  });
+  }, [pengaduanList, pengaduanSearch]);
 
-  const totalJiwaRentan = rentanList.reduce((acc, curr) => acc + (curr.jumlah_jiwa || 0), 0);
+  const totalJiwaRentan = React.useMemo(
+    () => rentanList.reduce((acc, curr) => acc + (curr.jumlah_jiwa || 0), 0),
+    [rentanList]
+  );
 
   return (
     <div className="bg-[#f8fafc] min-h-screen flex flex-col font-sans">

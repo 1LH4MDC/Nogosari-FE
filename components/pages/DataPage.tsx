@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Clock, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ProgressBar } from '@/components/common';
@@ -50,67 +50,58 @@ export default function DataPage() {
     }
   };
 
-  // Group raw DB rows by Posyandu
-  const posyanduMap = new Map<number, PosyanduGroup>();
-  let totalJiwaOverall = 0;
-  let totalBayi = 0;
-  let totalBalita = 0;
-  let totalIbuHamil = 0;
-  let totalIbuMenyusui = 0;
-  let totalLansia = 0;
-  let totalDisabilitas = 0;
+  const {
+    posyanduList,
+    totalJiwaOverall,
+    totalBayi, totalBalita, totalIbuHamil, totalIbuMenyusui, totalLansia, totalDisabilitas,
+  } = useMemo(() => {
+    const posyanduMap = new Map<number, PosyanduGroup>();
+    let totalJiwaOverall = 0;
+    let totalBayi = 0, totalBalita = 0, totalIbuHamil = 0;
+    let totalIbuMenyusui = 0, totalLansia = 0, totalDisabilitas = 0;
 
-  rawData.forEach(item => {
-    const pId = item.id_posyandu;
-    totalJiwaOverall += item.jumlah_jiwa || 0;
+    rawData.forEach(item => {
+      const pId = item.id_posyandu;
+      totalJiwaOverall += item.jumlah_jiwa || 0;
 
-    if (!posyanduMap.has(pId)) {
-      posyanduMap.set(pId, {
-        id_posyandu: pId,
-        name: item.nama_posyandu || `POSYANDU #${pId}`,
-        dusun: item.dusun || 'Dusun Krajan',
-        bayi: 0,
-        balita: 0,
-        ibuHamil: 0,
-        ibuMenyusui: 0,
-        lansia: 0,
-        disabilitas: 0,
-        totalJiwa: 0,
-      });
-    }
+      if (!posyanduMap.has(pId)) {
+        posyanduMap.set(pId, {
+          id_posyandu: pId,
+          name: item.nama_posyandu || `POSYANDU #${pId}`,
+          dusun: item.dusun || 'Dusun Krajan',
+          bayi: 0, balita: 0, ibuHamil: 0, ibuMenyusui: 0, lansia: 0, disabilitas: 0,
+          totalJiwa: 0,
+        });
+      }
 
-    const group = posyanduMap.get(pId)!;
-    group.totalJiwa += item.jumlah_jiwa || 0;
-    const kat = item.id_kategori;
-    const katName = (item.nama_kategori || '').toLowerCase();
-    const count = item.jumlah_jiwa || 0;
+      const group = posyanduMap.get(pId)!;
+      group.totalJiwa += item.jumlah_jiwa || 0;
+      const kat = item.id_kategori;
+      const katName = (item.nama_kategori || '').toLowerCase();
+      const count = item.jumlah_jiwa || 0;
 
-    if (kat === 1 || katName.includes('bayi')) {
-      group.bayi += count;
-      totalBayi += count;
-    } else if (kat === 2 || katName.includes('balita')) {
-      group.balita += count;
-      totalBalita += count;
-    } else if (kat === 3 || katName.includes('hamil')) {
-      group.ibuHamil += count;
-      totalIbuHamil += count;
-    } else if (kat === 4 || katName.includes('menyusui')) {
-      group.ibuMenyusui += count;
-      totalIbuMenyusui += count;
-    } else if (kat === 5 || katName.includes('lansia')) {
-      group.lansia += count;
-      totalLansia += count;
-    } else if (kat === 6 || katName.includes('disabilitas')) {
-      group.disabilitas += count;
-      totalDisabilitas += count;
-    }
-  });
+      if (kat === 1 || katName.includes('bayi')) { group.bayi += count; totalBayi += count; }
+      else if (kat === 2 || katName.includes('balita')) { group.balita += count; totalBalita += count; }
+      else if (kat === 3 || katName.includes('hamil')) { group.ibuHamil += count; totalIbuHamil += count; }
+      else if (kat === 4 || katName.includes('menyusui')) { group.ibuMenyusui += count; totalIbuMenyusui += count; }
+      else if (kat === 5 || katName.includes('lansia')) { group.lansia += count; totalLansia += count; }
+      else if (kat === 6 || katName.includes('disabilitas')) { group.disabilitas += count; totalDisabilitas += count; }
+    });
 
-  const posyanduList = Array.from(posyanduMap.values());
+    return {
+      posyanduList: Array.from(posyanduMap.values()),
+      totalJiwaOverall, totalBayi, totalBalita, totalIbuHamil, totalIbuMenyusui, totalLansia, totalDisabilitas,
+    };
+  }, [rawData]);
 
-  const filteredList = selectedDusun === 'ALL'
-    ? posyanduList
-    : posyanduList.filter((item) => item.dusun.replace(/\s+/g, '').includes(selectedDusun.replace(/\s+/g, '')));
+  const filteredList = useMemo(() =>
+    selectedDusun === 'ALL'
+      ? posyanduList
+      : posyanduList.filter(item =>
+          item.dusun.toUpperCase().replace(/\s+/g, '').includes(selectedDusun.replace(/\s+/g, ''))
+        ),
+    [posyanduList, selectedDusun]
+  );
 
   return (
     <div className="bg-[#f4f7fb] min-h-screen py-10 sm:py-14">

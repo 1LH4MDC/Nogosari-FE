@@ -16,6 +16,24 @@ import {
 export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://nogosari-be.vercel.app').replace(/\/$/, '');
 export const SWAGGER_DOCS_URL = `${API_BASE_URL}/api-docs`;
 
+// --- Simple in-memory cache (TTL: 2 minutes) for rarely-changing data ---
+const _cache = new Map<string, { data: unknown; ts: number }>();
+const CACHE_TTL_MS = 2 * 60 * 1000; // 2 minutes
+
+async function cachedFetch<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+  const now = Date.now();
+  const cached = _cache.get(key);
+  if (cached && now - cached.ts < CACHE_TTL_MS) return cached.data as T;
+  const data = await fetcher();
+  _cache.set(key, { data, ts: now });
+  return data;
+}
+
+export function invalidateCache(key?: string) {
+  if (key) _cache.delete(key);
+  else _cache.clear();
+}
+
 // Helper to get auth header from localStorage
 function getAuthHeaders() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -100,7 +118,8 @@ export async function updateSensorThreshold(idSensor: string, thresholds: Thresh
 // 3. Kelompok Rentan Banjir API
 export async function getRentanBanjirData(): Promise<RentanBanjirData[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/rentan-banjir`, { cache: 'no-store' });
+    // Revalidate every 30s — data changes when admin saves
+    const res = await fetch(`${API_BASE_URL}/api/rentan-banjir`, { next: { revalidate: 30 } } as RequestInit);
     if (!res.ok) throw new Error('Gagal mengambil data kelompok rentan');
     return await res.json();
   } catch (error) {
@@ -110,25 +129,19 @@ export async function getRentanBanjirData(): Promise<RentanBanjirData[]> {
 }
 
 export async function getDusunList(): Promise<DusunOption[]> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/dusun`, { cache: 'no-store' });
+  return cachedFetch('dusun-list', async () => {
+    const res = await fetch(`${API_BASE_URL}/api/dusun`);
     if (!res.ok) throw new Error('Gagal mengambil daftar dusun');
-    return await res.json();
-  } catch (error) {
-    console.error('getDusunList Error:', error);
-    return [];
-  }
+    return res.json() as Promise<DusunOption[]>;
+  });
 }
 
 export async function getPosyanduList(): Promise<PosyanduOption[]> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/posyandu`, { cache: 'no-store' });
+  return cachedFetch('posyandu-list', async () => {
+    const res = await fetch(`${API_BASE_URL}/api/posyandu`);
     if (!res.ok) throw new Error('Gagal mengambil daftar posyandu');
-    return await res.json();
-  } catch (error) {
-    console.error('getPosyanduList Error:', error);
-    return [];
-  }
+    return res.json() as Promise<PosyanduOption[]>;
+  });
 }
 
 export async function createPosyandu(payload: { nama_posyandu: string; dusun: string }) {
@@ -139,6 +152,7 @@ export async function createPosyandu(payload: { nama_posyandu: string; dusun: st
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || data.error || 'Gagal menambahkan posyandu baru');
+  invalidateCache('posyandu-list'); // bust cache so next fetch is fresh
   return data;
 }
 
@@ -149,6 +163,7 @@ export async function deletePosyandu(id: number) {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || data.error || 'Gagal menghapus data posyandu');
+  invalidateCache('posyandu-list'); // bust cache so next fetch is fresh
   return data;
 }
 
@@ -169,14 +184,11 @@ export async function saveBatchRentanBanjir(payload: {
 }
 
 export async function getKategoriList(): Promise<KategoriOption[]> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/rentan-banjir/kategori`, { cache: 'no-store' });
+  return cachedFetch('kategori-list', async () => {
+    const res = await fetch(`${API_BASE_URL}/api/rentan-banjir/kategori`);
     if (!res.ok) throw new Error('Gagal mengambil daftar kategori');
-    return await res.json();
-  } catch (error) {
-    console.error('getKategoriList Error:', error);
-    return [];
-  }
+    return res.json() as Promise<KategoriOption[]>;
+  });
 }
 
 export async function getRentanBanjirSummary(): Promise<RentanBanjirSummary | null> {
