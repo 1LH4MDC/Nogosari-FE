@@ -109,7 +109,7 @@ export async function getRentanBanjirData(): Promise<RentanBanjirData[]> {
 
 export async function getPosyanduList(): Promise<PosyanduOption[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/rentan-banjir/posyandu`, { cache: 'no-store' });
+    const res = await fetch(`${API_BASE_URL}/api/posyandu`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Gagal mengambil daftar posyandu');
     return await res.json();
   } catch (error) {
@@ -119,13 +119,13 @@ export async function getPosyanduList(): Promise<PosyanduOption[]> {
 }
 
 export async function createPosyandu(payload: { nama_posyandu: string; dusun: string }) {
-  const res = await fetch(`${API_BASE_URL}/api/rentan-banjir/posyandu`, {
+  const res = await fetch(`${API_BASE_URL}/api/posyandu`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(payload),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || 'Gagal menambahkan posyandu baru');
+  if (!res.ok) throw new Error(data.message || data.error || 'Gagal menambahkan posyandu baru');
   return data;
 }
 
