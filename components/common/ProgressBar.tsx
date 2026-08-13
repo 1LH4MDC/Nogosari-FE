@@ -1,5 +1,7 @@
 'use client';
 
+import { motion } from 'framer-motion';
+
 interface ProgressBarProps {
   label: string;
   count: number;
@@ -31,9 +33,12 @@ export default function ProgressBar({
         </span>
       </div>
       <div className={`w-full bg-blue-50 rounded-full overflow-hidden ${height}`}>
-        <div
-          className={`${barColor} ${height} rounded-full transition-all duration-500 ease-out`}
-          style={{ width: `${percentage}%` }}
+        <motion.div
+          initial={{ width: 0 }}
+          whileInView={{ width: `${percentage}%` }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          className={`${barColor} ${height} rounded-full`}
         />
       </div>
     </div>
