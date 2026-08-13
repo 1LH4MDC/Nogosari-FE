@@ -129,21 +129,6 @@ export default function DataPage() {
               Data kelompok rentan ini diambil berdasarkan data riil dari 5 dusun yang ada di Desa Nogosari, Kecamatan Rambipuji, Jember.
             </p>
           </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={fetchData}
-              disabled={loading}
-              className="p-2.5 rounded-full bg-white border border-gray-200 text-gray-600 hover:text-blue-600 shadow-2xs transition-colors"
-              title="Refresh Data DB"
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin text-blue-600' : ''}`} />
-            </button>
-            <div className="self-start md:self-auto shrink-0 flex items-center gap-2 bg-blue-50/80 border border-blue-100 text-blue-800 text-xs font-semibold px-4 py-2 rounded-full shadow-2xs">
-              <Clock className="h-4 w-4 text-blue-600 shrink-0" />
-              <span>Database Terhubung Live</span>
-            </div>
-          </div>
         </motion.div>
 
         {/* 1B. Top Summary Grid */}
@@ -160,7 +145,7 @@ export default function DataPage() {
 
             <div className="relative z-10">
               <span className="text-xs uppercase font-extrabold tracking-wider text-gray-400">
-                TOTAL KELOMPOK RENTAN (DB)
+                TOTAL KELOMPOK RENTAN
               </span>
               <div className="flex items-baseline gap-2 mt-2 mb-6">
                 <span className="text-4xl font-extrabold text-[#1d4ed8]">
@@ -198,7 +183,7 @@ export default function DataPage() {
             className="md:col-span-7 bg-white rounded-2xl p-6 border border-gray-200/70 shadow-xs"
           >
             <span className="text-xs uppercase font-extrabold tracking-wider text-gray-400 block mb-4">
-              DISTRIBUSI KELOMPOK RENTAN BENCANA (DB)
+              DISTRIBUSI KELOMPOK RENTAN BENCANA
             </span>
 
             <div className="grid grid-cols-1 gap-3">
