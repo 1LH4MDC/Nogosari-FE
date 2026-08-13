@@ -146,7 +146,7 @@ export default function DataPage() {
             <div className="absolute top-4 right-4 h-16 w-16 rounded-full bg-blue-50/60 -z-0" />
 
             <div className="relative z-10">
-              <span className="text-xs uppercase font-extrabold tracking-wider text-gray-400">
+              <span className="text-xs uppercase font-extrabold tracking-wider text-gray-600">
                 TOTAL KELOMPOK RENTAN
               </span>
               <div className="flex items-baseline gap-2 mt-2 mb-6">
@@ -159,7 +159,7 @@ export default function DataPage() {
               <div className="space-y-4 pt-4 border-t border-gray-100">
                 <ProgressBar
                   label="Dusun Krajan"
-                  count={posyanduList.filter(p => p.dusun.includes('KRAJAN')).reduce((a, b) => a + b.totalJiwa, 0)}
+                  count={posyanduList.filter(p => p.dusun.toUpperCase().includes('KRAJAN')).reduce((a, b) => a + b.totalJiwa, 0)}
                   maxCount={Math.max(totalJiwaOverall, 1)}
                   showPercentage={true}
                   barColor="bg-[#1d4ed8]"
@@ -167,7 +167,7 @@ export default function DataPage() {
                 />
                 <ProgressBar
                   label="Dusun Gumuk Bago"
-                  count={posyanduList.filter(p => p.dusun.includes('GUMUK')).reduce((a, b) => a + b.totalJiwa, 0)}
+                  count={posyanduList.filter(p => p.dusun.toUpperCase().includes('GUMUK')).reduce((a, b) => a + b.totalJiwa, 0)}
                   maxCount={Math.max(totalJiwaOverall, 1)}
                   showPercentage={true}
                   barColor="bg-[#047857]"
@@ -184,7 +184,7 @@ export default function DataPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="md:col-span-7 bg-white rounded-2xl p-6 border border-gray-200/70 shadow-xs"
           >
-            <span className="text-xs uppercase font-extrabold tracking-wider text-gray-400 block mb-4">
+            <span className="text-xs uppercase font-extrabold tracking-wider text-gray-600 block mb-4">
               DISTRIBUSI KELOMPOK RENTAN BENCANA
             </span>
 
