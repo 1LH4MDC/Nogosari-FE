@@ -459,52 +459,31 @@ export default function AdminDashboardPage() {
           )}
         </AnimatePresence>
 
-        {/* Tab Navigation */}
-        <div className="flex overflow-x-auto gap-2 border-b border-gray-200 mb-8 pb-1 scrollbar-none">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
-              activeTab === 'overview'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-gray-600 hover:bg-white hover:text-gray-900'
-            }`}
-          >
-            <LayoutDashboard className="h-4 w-4" />
-            Ringkasan System
-          </button>
-          <button
-            onClick={() => setActiveTab('rentan')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
-              activeTab === 'rentan'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-gray-600 hover:bg-white hover:text-gray-900'
-            }`}
-          >
-            <Users className="h-4 w-4" />
-            Kelompok Rentan (SI-Care)
-          </button>
-          <button
-            onClick={() => setActiveTab('pengaduan')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
-              activeTab === 'pengaduan'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-gray-600 hover:bg-white hover:text-gray-900'
-            }`}
-          >
-            <MessageSquare className="h-4 w-4" />
-            Pengaduan Warga
-          </button>
-          <button
-            onClick={() => setActiveTab('threshold')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
-              activeTab === 'threshold'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-gray-600 hover:bg-white hover:text-gray-900'
-            }`}
-          >
-            <Sliders className="h-4 w-4" />
-            Pengaturan Sensor IoT
-          </button>
+        {/* Symmetrical Tab Navigation */}
+        <div className="flex overflow-x-auto gap-1.5 p-1.5 bg-gray-200/60 rounded-2xl border border-gray-200/80 mb-8 scrollbar-none">
+          {[
+            { id: 'overview', label: 'Ringkasan System', icon: LayoutDashboard },
+            { id: 'rentan', label: 'Kelompok Rentan (SI-Care)', icon: Users },
+            { id: 'pengaduan', label: 'Pengaduan Warga', icon: MessageSquare },
+            { id: 'threshold', label: 'Pengaturan Sensor IoT', icon: Sliders },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as 'overview' | 'rentan' | 'pengaduan' | 'threshold')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all whitespace-nowrap cursor-pointer ${
+                  isActive
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:bg-white/80 hover:text-gray-900'
+                }`}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* TAB 1: OVERVIEW */}
