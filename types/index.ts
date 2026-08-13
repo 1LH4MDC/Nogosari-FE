@@ -63,10 +63,16 @@ export interface RentanBanjirPayload {
   jumlah_jiwa: number;
 }
 
+export interface DusunOption {
+  id: number;
+  nama_dusun: string;
+}
+
 export interface PosyanduOption {
   id: number;
   nama_posyandu: string;
   dusun: string;
+  id_dusun?: number;
 }
 
 export interface KategoriOption {

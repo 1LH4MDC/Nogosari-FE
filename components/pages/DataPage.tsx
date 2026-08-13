@@ -21,9 +21,12 @@ export interface PosyanduGroup {
 }
 
 const dusunTabs = [
-  { id: 'ALL', label: 'Semua' },
+  { id: 'ALL', label: 'Semua Dusun' },
+  { id: 'GUMUKBAGU', label: 'Dusun Gumukbagu' },
+  { id: 'GUMUKGEBANG', label: 'Dusun Gumukgebang' },
+  { id: 'GUMUKLIMO', label: 'Dusun Gumuklimo' },
+  { id: 'GUMUKSARI', label: 'Dusun Gumuksari' },
   { id: 'KRAJAN', label: 'Dusun Krajan' },
-  { id: 'GUMUK BAGO', label: 'Dusun Gumuk Bago' },
 ];
 
 export default function DataPage() {
@@ -65,7 +68,7 @@ export default function DataPage() {
       posyanduMap.set(pId, {
         id_posyandu: pId,
         name: item.nama_posyandu || `POSYANDU #${pId}`,
-        dusun: (item.dusun || 'Krajan').toUpperCase(),
+        dusun: (item.dusun || 'Dusun Krajan').toUpperCase(),
         bayi: 0,
         balita: 0,
         ibuHamil: 0,
@@ -78,7 +81,6 @@ export default function DataPage() {
 
     const group = posyanduMap.get(pId)!;
     group.totalJiwa += item.jumlah_jiwa || 0;
-
     const kat = item.id_kategori;
     const katName = (item.nama_kategori || '').toLowerCase();
     const count = item.jumlah_jiwa || 0;
@@ -108,7 +110,7 @@ export default function DataPage() {
 
   const filteredList = selectedDusun === 'ALL'
     ? posyanduList
-    : posyanduList.filter((item) => item.dusun.includes(selectedDusun));
+    : posyanduList.filter((item) => item.dusun.replace(/\s+/g, '').includes(selectedDusun.replace(/\s+/g, '')));
 
   return (
     <div className="bg-[#f4f7fb] min-h-screen py-10 sm:py-14">

@@ -34,6 +34,7 @@ import {
   updateRentanBanjirData,
   deleteRentanBanjirData,
   getPosyanduList,
+  getDusunList,
   createPosyandu,
   saveBatchRentanBanjir,
   getKategoriList,
@@ -45,7 +46,8 @@ import {
   SensorReading,
   SensorDevice,
   RentanBanjirData,
-  PengaduanData
+  PengaduanData,
+  DusunOption
 } from '@/types';
 import { Logo } from '@/components/common';
 
@@ -97,8 +99,9 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Dynamic Posyandu & Kategori Options from DB
+  // Dynamic Posyandu, Dusun & Kategori Options from DB
   const [posyanduOptions, setPosyanduOptions] = useState<{ id: number; nama_posyandu: string; dusun: string }[]>([]);
+  const [dusunOptions, setDusunOptions] = useState<DusunOption[]>([]);
   const [kategoriOptions, setKategoriOptions] = useState<{ id: number; nama_kategori: string }[]>([]);
 
   useEffect(() => {
@@ -124,13 +127,14 @@ export default function AdminDashboardPage() {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [sensor, devs, rentan, pengaduan, posyandus, kategoris] = await Promise.all([
+      const [sensor, devs, rentan, pengaduan, posyandus, kategoris, dusuns] = await Promise.all([
         getLatestSensorReading(),
         getSensorDevices(),
         getRentanBanjirData(),
         getPengaduanList().catch(() => []),
         getPosyanduList().catch(() => []),
         getKategoriList().catch(() => []),
+        getDusunList().catch(() => []),
       ]);
       if (sensor) setSensorReading(sensor);
       if (devs && devs.length > 0) {
@@ -149,6 +153,9 @@ export default function AdminDashboardPage() {
       if (kategoris && kategoris.length > 0) {
         setKategoriOptions(kategoris);
       }
+      if (dusuns && dusuns.length > 0) {
+        setDusunOptions(dusuns);
+      }
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
     } finally {
@@ -166,14 +173,14 @@ export default function AdminDashboardPage() {
     setBatchModalAction(action);
     if (action === 'ADD') {
       setNewNamaPosyandu('');
-      setNewDusun('Krajan');
+      setNewDusun(dusunOptions.length > 0 ? dusunOptions[0].nama_dusun : 'Dusun Gumukbagu');
       setCategoryCounts({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 });
     } else {
       const posId = targetPosyanduId || (posyanduOptions.length > 0 ? posyanduOptions[0].id : 1);
       setSelectedPosyanduId(posId);
       const targetPosyandu = posyanduOptions.find(p => p.id === posId);
       setNewNamaPosyandu(targetPosyandu?.nama_posyandu || '');
-      setNewDusun(targetPosyandu?.dusun || 'Krajan');
+      setNewDusun(targetPosyandu?.dusun || (dusunOptions.length > 0 ? dusunOptions[0].nama_dusun : 'Dusun Gumukbagu'));
 
       const counts: { [key: number]: number } = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
       rentanList.filter(r => r.id_posyandu === posId).forEach(r => {
@@ -836,15 +843,27 @@ export default function AdminDashboardPage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-gray-700 block">Nama Dusun / Wilayah</label>
-                    <input
-                      type="text"
-                      required
+                    <label className="text-xs font-bold text-gray-700 block">Dusun / Wilayah</label>
+                    <select
                       value={newDusun}
                       onChange={e => setNewDusun(e.target.value)}
-                      placeholder="Misal: Krajan / Gumuk Bago"
                       className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-blue-500 font-bold bg-white"
-                    />
+                    >
+                      {(dusunOptions.length > 0
+                        ? dusunOptions
+                        : [
+                            { id: 1, nama_dusun: 'Dusun Gumukbagu' },
+                            { id: 2, nama_dusun: 'Dusun Gumukgebang' },
+                            { id: 3, nama_dusun: 'Dusun Gumuklimo' },
+                            { id: 4, nama_dusun: 'Dusun Gumuksari' },
+                            { id: 5, nama_dusun: 'Dusun Krajan' },
+                          ]
+                      ).map(d => (
+                        <option key={d.id} value={d.nama_dusun}>
+                          {d.nama_dusun}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 

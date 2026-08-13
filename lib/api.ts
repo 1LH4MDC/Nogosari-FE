@@ -6,6 +6,7 @@ import {
   RentanBanjirData,
   RentanBanjirPayload,
   PosyanduOption,
+  DusunOption,
   KategoriOption,
   RentanBanjirSummary,
   PengaduanData,
@@ -104,6 +105,17 @@ export async function getRentanBanjirData(): Promise<RentanBanjirData[]> {
     return await res.json();
   } catch (error) {
     console.error('getRentanBanjirData Error:', error);
+    return [];
+  }
+}
+
+export async function getDusunList(): Promise<DusunOption[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/dusun`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Gagal mengambil daftar dusun');
+    return await res.json();
+  } catch (error) {
+    console.error('getDusunList Error:', error);
     return [];
   }
 }
