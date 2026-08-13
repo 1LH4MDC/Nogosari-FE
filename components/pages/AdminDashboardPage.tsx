@@ -186,6 +186,19 @@ export default function AdminDashboardPage() {
 
   const handleSaveBatch = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (posyanduMode === 'NEW') {
+      const trimmedName = newNamaPosyandu.trim().toLowerCase();
+      const existing = posyanduOptions.find(
+        p => p.nama_posyandu.trim().toLowerCase() === trimmedName
+      );
+      if (existing) {
+        showFeedback(
+          'error',
+          `Data Posyandu "${newNamaPosyandu.trim()}" sudah ada! Silakan pilih opsi 'Pilih Posyandu Yang Sudah Ada'.`
+        );
+        return;
+      }
+    }
     try {
       const categoriesPayload = Object.entries(categoryCounts).map(([kId, val]) => ({
         id_kategori: Number(kId),
