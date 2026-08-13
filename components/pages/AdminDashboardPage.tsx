@@ -576,10 +576,11 @@ export default function AdminDashboardPage() {
             <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs text-gray-600">
-                  <thead className="bg-gray-50 border-b border-gray-200 text-gray-700 font-extrabold uppercase tracking-wider">
+                  <thead className="bg-gray-50/80 text-left text-xs font-extrabold text-gray-500 uppercase tracking-wider border-b border-gray-100">
                     <tr>
                       <th className="px-6 py-3.5">No.</th>
-                      <th className="px-6 py-3.5">Posyandu / Wilayah</th>
+                      <th className="px-6 py-3.5">Nama Posyandu</th>
+                      <th className="px-6 py-3.5">Dusun / Wilayah</th>
                       <th className="px-6 py-3.5">Kategori Rentan</th>
                       <th className="px-6 py-3.5">Jumlah Jiwa</th>
                       <th className="px-6 py-3.5 text-right">Aksi</th>
@@ -588,7 +589,7 @@ export default function AdminDashboardPage() {
                   <tbody className="divide-y divide-gray-100">
                     {filteredRentan.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
+                        <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
                           Belum ada data kelompok rentan yang ditemukan.
                         </td>
                       </tr>
@@ -597,6 +598,11 @@ export default function AdminDashboardPage() {
                         <tr key={item.id ?? item.id_rentan ?? index} className="hover:bg-gray-50/80 transition-colors">
                           <td className="px-6 py-4 font-bold text-gray-900">{index + 1}</td>
                           <td className="px-6 py-4 font-bold text-gray-800">{item.nama_posyandu || `Posyandu #${item.id_posyandu}`}</td>
+                          <td className="px-6 py-4">
+                            <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-100">
+                              {item.dusun || 'Dusun Krajan'}
+                            </span>
+                          </td>
                           <td className="px-6 py-4">
                             <span className="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100">
                               {item.nama_kategori || `Kategori #${item.id_kategori}`}
