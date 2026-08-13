@@ -514,7 +514,7 @@ export default function AdminDashboardPage() {
                 <table className="w-full text-left text-xs text-gray-600">
                   <thead className="bg-gray-50 border-b border-gray-200 text-gray-700 font-extrabold uppercase tracking-wider">
                     <tr>
-                      <th className="px-6 py-3.5">ID</th>
+                      <th className="px-6 py-3.5">No.</th>
                       <th className="px-6 py-3.5">Posyandu / Wilayah</th>
                       <th className="px-6 py-3.5">Kategori Rentan</th>
                       <th className="px-6 py-3.5">Jumlah Jiwa</th>
@@ -529,9 +529,9 @@ export default function AdminDashboardPage() {
                         </td>
                       </tr>
                     ) : (
-                      filteredRentan.map(item => (
-                        <tr key={item.id_rentan} className="hover:bg-gray-50/80 transition-colors">
-                          <td className="px-6 py-4 font-bold text-gray-900">#{item.id_rentan}</td>
+                      filteredRentan.map((item, index) => (
+                        <tr key={item.id ?? item.id_rentan ?? index} className="hover:bg-gray-50/80 transition-colors">
+                          <td className="px-6 py-4 font-bold text-gray-900">{index + 1}</td>
                           <td className="px-6 py-4 font-bold text-gray-800">{item.nama_posyandu || `Posyandu #${item.id_posyandu}`}</td>
                           <td className="px-6 py-4">
                             <span className="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100">
