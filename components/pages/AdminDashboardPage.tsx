@@ -162,55 +162,49 @@ export default function AdminDashboardPage() {
   // --- Handlers: Rentan Banjir Batch Input ---
   const handleOpenBatchModal = (targetPosyanduId?: number, action: 'ADD' | 'EDIT' = 'ADD') => {
     setBatchModalAction(action);
-    const posId = targetPosyanduId || (posyanduOptions.length > 0 ? posyanduOptions[0].id : 1);
-    setSelectedPosyanduId(posId);
-    setPosyanduMode('EXISTING');
-    setNewNamaPosyandu('');
-    setNewDusun('Krajan');
-
-    // Populate category counts for selected posyandu
-    const counts: { [key: number]: number } = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
-    rentanList.filter(r => r.id_posyandu === posId).forEach(r => {
-      if (r.id_kategori) counts[r.id_kategori] = r.jumlah_jiwa || 0;
-    });
-    setCategoryCounts(counts);
+    if (action === 'ADD') {
+      setNewNamaPosyandu('');
+      setNewDusun('Krajan');
+      setCategoryCounts({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 });
+    } else {
+      const posId = targetPosyanduId || (posyanduOptions.length > 0 ? posyanduOptions[0].id : 1);
+      setSelectedPosyanduId(posId);
+      const counts: { [key: number]: number } = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+      rentanList.filter(r => r.id_posyandu === posId).forEach(r => {
+        if (r.id_kategori) counts[r.id_kategori] = r.jumlah_jiwa || 0;
+      });
+      setCategoryCounts(counts);
+    }
     setIsBatchModalOpen(true);
-  };
-
-  const handlePosyanduSelectChange = (posId: number) => {
-    setSelectedPosyanduId(posId);
-    const counts: { [key: number]: number } = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
-    rentanList.filter(r => r.id_posyandu === posId).forEach(r => {
-      if (r.id_kategori) counts[r.id_kategori] = r.jumlah_jiwa || 0;
-    });
-    setCategoryCounts(counts);
   };
 
   const handleSaveBatch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (posyanduMode === 'NEW') {
+    if (batchModalAction === 'ADD') {
       const trimmedName = newNamaPosyandu.trim().toLowerCase();
+      if (!trimmedName) {
+        showFeedback('error', 'Nama Posyandu wajib diisi!');
+        return;
+      }
       const existing = posyanduOptions.find(
         p => p.nama_posyandu.trim().toLowerCase() === trimmedName
       );
       if (existing) {
-        showFeedback(
-          'error',
-          `Data Posyandu "${newNamaPosyandu.trim()}" sudah ada! Silakan pilih opsi 'Pilih Posyandu Yang Sudah Ada'.`
-        );
+        showFeedback('error', `Data Posyandu "${newNamaPosyandu.trim()}" sudah ada di database!`);
         return;
       }
     }
+
     try {
       const categoriesPayload = Object.entries(categoryCounts).map(([kId, val]) => ({
         id_kategori: Number(kId),
         jumlah_jiwa: Number(val) || 0,
       }));
 
-      const payload = posyanduMode === 'NEW'
+      const payload = batchModalAction === 'ADD'
         ? {
             nama_posyandu: newNamaPosyandu.trim(),
-            dusun: newDusun.trim(),
+            dusun: newDusun.trim() || 'Krajan',
             categories: categoriesPayload,
           }
         : {
@@ -219,7 +213,12 @@ export default function AdminDashboardPage() {
           };
 
       await saveBatchRentanBanjir(payload);
-      showFeedback('success', 'Data kelompok rentan posyandu berhasil disimpan!');
+      showFeedback(
+        'success',
+        batchModalAction === 'ADD'
+          ? `Posyandu "${newNamaPosyandu.trim()}" & data rentan berhasil ditambahkan!`
+          : 'Data kelompok rentan posyandu berhasil diperbarui!'
+      );
       setIsBatchModalOpen(false);
 
       const [updatedRentan, updatedPosyandus] = await Promise.all([
@@ -764,10 +763,10 @@ export default function AdminDashboardPage() {
               <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                 <div>
                   <h3 className="font-extrabold text-base text-gray-900">
-                    {batchModalAction === 'EDIT' ? 'Edit Data Kelompok Rentan Posyandu' : 'Tambah Data Kelompok Rentan Posyandu'}
+                    {batchModalAction === 'EDIT' ? 'Edit Data Kelompok Rentan Posyandu' : 'Tambah Posyandu Baru'}
                   </h3>
                   <p className="text-xs text-gray-500">
-                    {batchModalAction === 'EDIT' ? 'Perbarui jumlah jiwa untuk 6 kategori rentan.' : 'Masukkan jumlah jiwa sekaligus untuk seluruh 6 kategori rentan.'}
+                    {batchModalAction === 'EDIT' ? 'Perbarui jumlah jiwa untuk 6 kategori rentan.' : 'Masukkan nama posyandu, dusun, dan jumlah jiwa 6 kategori rentan.'}
                   </p>
                 </div>
                 <button onClick={() => setIsBatchModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1">
@@ -777,56 +776,7 @@ export default function AdminDashboardPage() {
 
               <form onSubmit={handleSaveBatch} className="space-y-5">
 
-                {/* Mode Selector: Hanya tampil di mode TAMBAH */}
                 {batchModalAction === 'ADD' ? (
-                  <div className="flex rounded-xl bg-gray-100 p-1 text-xs font-bold">
-                    <button
-                      type="button"
-                      onClick={() => setPosyanduMode('EXISTING')}
-                      className={`flex-1 py-2 rounded-lg transition-all ${
-                        posyanduMode === 'EXISTING' ? 'bg-white text-blue-700 shadow-2xs font-extrabold' : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      Pilih Posyandu Yang Sudah Ada
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPosyanduMode('NEW')}
-                      className={`flex-1 py-2 rounded-lg transition-all ${
-                        posyanduMode === 'NEW' ? 'bg-white text-emerald-700 shadow-2xs font-extrabold' : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      + Buat Posyandu Baru
-                    </button>
-                  </div>
-                ) : null}
-
-                {posyanduMode === 'EXISTING' || batchModalAction === 'EDIT' ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-gray-700 block">Nama Posyandu</label>
-                      <select
-                        disabled={batchModalAction === 'EDIT'}
-                        value={selectedPosyanduId}
-                        onChange={e => handlePosyanduSelectChange(Number(e.target.value))}
-                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-blue-500 font-bold bg-white disabled:bg-gray-100 disabled:text-gray-700"
-                      >
-                        {posyanduOptions.map(p => (
-                          <option key={p.id} value={p.id}>{p.nama_posyandu}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-gray-700 block">Wilayah / Dusun</label>
-                      <input
-                        type="text"
-                        disabled
-                        value={posyanduOptions.find(p => p.id === selectedPosyanduId)?.dusun || 'Krajan'}
-                        className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs bg-gray-100 text-gray-700 font-bold"
-                      />
-                    </div>
-                  </div>
-                ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-gray-700 block">Nama Posyandu Baru</label>
@@ -848,6 +798,27 @@ export default function AdminDashboardPage() {
                         onChange={e => setNewDusun(e.target.value)}
                         placeholder="Misal: Krajan / Gumuk Bago"
                         className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-emerald-500 font-bold bg-white"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-gray-700 block">Nama Posyandu</label>
+                      <input
+                        type="text"
+                        disabled
+                        value={posyanduOptions.find(p => p.id === selectedPosyanduId)?.nama_posyandu || ''}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs bg-gray-100 text-gray-700 font-bold"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-gray-700 block">Wilayah / Dusun</label>
+                      <input
+                        type="text"
+                        disabled
+                        value={posyanduOptions.find(p => p.id === selectedPosyanduId)?.dusun || 'Krajan'}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs bg-gray-100 text-gray-700 font-bold"
                       />
                     </div>
                   </div>
