@@ -171,6 +171,10 @@ export default function AdminDashboardPage() {
     } else {
       const posId = targetPosyanduId || (posyanduOptions.length > 0 ? posyanduOptions[0].id : 1);
       setSelectedPosyanduId(posId);
+      const targetPosyandu = posyanduOptions.find(p => p.id === posId);
+      setNewNamaPosyandu(targetPosyandu?.nama_posyandu || '');
+      setNewDusun(targetPosyandu?.dusun || 'Krajan');
+
       const counts: { [key: number]: number } = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
       rentanList.filter(r => r.id_posyandu === posId).forEach(r => {
         if (r.id_kategori) counts[r.id_kategori] = r.jumlah_jiwa || 0;
@@ -182,17 +186,26 @@ export default function AdminDashboardPage() {
 
   const handleSaveBatch = async (e: React.FormEvent) => {
     e.preventDefault();
+    const trimmedName = newNamaPosyandu.trim();
+    if (!trimmedName) {
+      showFeedback('error', 'Nama Posyandu wajib diisi!');
+      return;
+    }
+
     if (batchModalAction === 'ADD') {
-      const trimmedName = newNamaPosyandu.trim().toLowerCase();
-      if (!trimmedName) {
-        showFeedback('error', 'Nama Posyandu wajib diisi!');
-        return;
-      }
       const existing = posyanduOptions.find(
-        p => p.nama_posyandu.trim().toLowerCase() === trimmedName
+        p => p.nama_posyandu.trim().toLowerCase() === trimmedName.toLowerCase()
       );
       if (existing) {
-        showFeedback('error', `Data Posyandu "${newNamaPosyandu.trim()}" sudah ada di database!`);
+        showFeedback('error', `Data Posyandu "${trimmedName}" sudah ada di database!`);
+        return;
+      }
+    } else {
+      const existing = posyanduOptions.find(
+        p => p.id !== selectedPosyanduId && p.nama_posyandu.trim().toLowerCase() === trimmedName.toLowerCase()
+      );
+      if (existing) {
+        showFeedback('error', `Nama Posyandu "${trimmedName}" sudah digunakan oleh Posyandu lain!`);
         return;
       }
     }
@@ -205,12 +218,14 @@ export default function AdminDashboardPage() {
 
       const payload = batchModalAction === 'ADD'
         ? {
-            nama_posyandu: newNamaPosyandu.trim(),
+            nama_posyandu: trimmedName,
             dusun: newDusun.trim() || 'Krajan',
             categories: categoriesPayload,
           }
         : {
             id_posyandu: Number(selectedPosyanduId),
+            nama_posyandu: trimmedName,
+            dusun: newDusun.trim() || 'Krajan',
             categories: categoriesPayload,
           };
 
@@ -218,8 +233,8 @@ export default function AdminDashboardPage() {
       showFeedback(
         'success',
         batchModalAction === 'ADD'
-          ? `Posyandu "${newNamaPosyandu.trim()}" & data rentan berhasil ditambahkan!`
-          : 'Data kelompok rentan posyandu berhasil diperbarui!'
+          ? `Posyandu "${trimmedName}" & data rentan berhasil ditambahkan!`
+          : `Data Posyandu "${trimmedName}" & kelompok rentan berhasil diperbarui!`
       );
       setIsBatchModalOpen(false);
 
@@ -804,53 +819,34 @@ export default function AdminDashboardPage() {
 
               <form onSubmit={handleSaveBatch} className="space-y-5">
 
-                {batchModalAction === 'ADD' ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-gray-700 block">Nama Posyandu Baru</label>
-                      <input
-                        type="text"
-                        required
-                        value={newNamaPosyandu}
-                        onChange={e => setNewNamaPosyandu(e.target.value)}
-                        placeholder="Misal: Posyandu Bougenville 64"
-                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-emerald-500 font-bold bg-white"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-gray-700 block">Nama Dusun / Wilayah</label>
-                      <input
-                        type="text"
-                        required
-                        value={newDusun}
-                        onChange={e => setNewDusun(e.target.value)}
-                        placeholder="Misal: Krajan / Gumuk Bago"
-                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-emerald-500 font-bold bg-white"
-                      />
-                    </div>
+                <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-xl border ${
+                  batchModalAction === 'ADD' ? 'bg-emerald-50/50 border-emerald-100' : 'bg-blue-50/50 border-blue-100'
+                }`}>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-700 block">
+                      {batchModalAction === 'ADD' ? 'Nama Posyandu Baru' : 'Nama Posyandu'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newNamaPosyandu}
+                      onChange={e => setNewNamaPosyandu(e.target.value)}
+                      placeholder="Misal: Posyandu Bougenville 59"
+                      className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-blue-500 font-bold bg-white"
+                    />
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-gray-700 block">Nama Posyandu</label>
-                      <input
-                        type="text"
-                        disabled
-                        value={posyanduOptions.find(p => p.id === selectedPosyanduId)?.nama_posyandu || ''}
-                        className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs bg-gray-100 text-gray-700 font-bold"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-gray-700 block">Wilayah / Dusun</label>
-                      <input
-                        type="text"
-                        disabled
-                        value={posyanduOptions.find(p => p.id === selectedPosyanduId)?.dusun || 'Krajan'}
-                        className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs bg-gray-100 text-gray-700 font-bold"
-                      />
-                    </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-700 block">Nama Dusun / Wilayah</label>
+                    <input
+                      type="text"
+                      required
+                      value={newDusun}
+                      onChange={e => setNewDusun(e.target.value)}
+                      placeholder="Misal: Krajan / Gumuk Bago"
+                      className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-blue-500 font-bold bg-white"
+                    />
                   </div>
-                )}
+                </div>
 
                 {/* 6 Kategori Input Grid */}
                 <div>
