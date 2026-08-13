@@ -33,6 +33,7 @@ import {
   updateRentanBanjirData,
   deleteRentanBanjirData,
   getPosyanduList,
+  createPosyandu,
   getKategoriList,
   getPengaduanList,
   deletePengaduan
@@ -79,6 +80,11 @@ export default function AdminDashboardPage() {
   const [formPosyandu, setFormPosyandu] = useState<number>(1);
   const [formKategori, setFormKategori] = useState<number>(1);
   const [formJumlahJiwa, setFormJumlahJiwa] = useState<number>(1);
+
+  // Posyandu Baru Modal State
+  const [isPosyanduModalOpen, setIsPosyanduModalOpen] = useState(false);
+  const [formNamaPosyanduBaru, setFormNamaPosyanduBaru] = useState('');
+  const [formDusunBaru, setFormDusunBaru] = useState('Krajan');
 
   // Pengaduan State
   const [pengaduanList, setPengaduanList] = useState<PengaduanData[]>([]);
@@ -189,6 +195,25 @@ export default function AdminDashboardPage() {
       setRentanList(updated);
     } catch (err: unknown) {
       showFeedback('error', err instanceof Error ? err.message : 'Gagal menyimpan data');
+    }
+  };
+
+  const handleSavePosyandu = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formNamaPosyanduBaru.trim()) return;
+    try {
+      const created = await createPosyandu({
+        nama_posyandu: formNamaPosyanduBaru.trim(),
+        dusun: formDusunBaru.trim(),
+      });
+      showFeedback('success', `Posyandu "${created.nama_posyandu}" di Dusun ${created.dusun} berhasil ditambahkan!`);
+      setIsPosyanduModalOpen(false);
+      setFormNamaPosyanduBaru('');
+      const updatedPosyandus = await getPosyanduList();
+      setPosyanduOptions(updatedPosyandus);
+      if (created.id) setFormPosyandu(created.id);
+    } catch (err: unknown) {
+      showFeedback('error', err instanceof Error ? err.message : 'Gagal menambahkan Posyandu baru');
     }
   };
 
@@ -487,13 +512,22 @@ export default function AdminDashboardPage() {
                 <h3 className="text-lg font-extrabold text-gray-900">Kelompok Rentan Banjir (SI-Care)</h3>
                 <p className="text-xs text-gray-500">Kelola data prioritas evakuasi kelompok rentan posyandu desa.</p>
               </div>
-              <button
-                onClick={() => handleOpenRentanModal()}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition-colors shadow-xs"
-              >
-                <Plus className="h-4 w-4" />
-                Tambah Data Rentan
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setIsPosyanduModalOpen(true)}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition-colors shadow-xs"
+                >
+                  <Building className="h-4 w-4" />
+                  Tambah Posyandu Baru
+                </button>
+                <button
+                  onClick={() => handleOpenRentanModal()}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition-colors shadow-xs"
+                >
+                  <Plus className="h-4 w-4" />
+                  Tambah Data Rentan
+                </button>
+              </div>
             </div>
 
             {/* Search Filter */}
@@ -730,12 +764,13 @@ export default function AdminDashboardPage() {
               </div>
 
               <form onSubmit={handleSaveRentan} className="space-y-4">
+                {/* Input 1: Nama Posyandu */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-700 block">Posyandu / Wilayah</label>
+                  <label className="text-xs font-bold text-gray-700 block">Nama Posyandu</label>
                   <select
                     value={formPosyandu}
                     onChange={e => setFormPosyandu(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-blue-500"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-blue-500 font-bold"
                   >
                     {posyanduOptions.map(p => (
                       <option key={p.id} value={p.id}>{p.nama_posyandu}</option>
@@ -743,6 +778,18 @@ export default function AdminDashboardPage() {
                   </select>
                 </div>
 
+                {/* Input 2: Dusun (Ditampilkan terpisah) */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-700 block">Wilayah / Dusun Posyandu</label>
+                  <input
+                    type="text"
+                    disabled
+                    value={posyanduOptions.find(p => p.id === formPosyandu)?.dusun || 'Krajan'}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs bg-gray-50 text-gray-700 font-bold"
+                  />
+                </div>
+
+                {/* Input 3: Kategori Rentan */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-gray-700 block">Kategori Rentan</label>
                   <select
@@ -756,6 +803,7 @@ export default function AdminDashboardPage() {
                   </select>
                 </div>
 
+                {/* Input 4: Jumlah Jiwa */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-gray-700 block">Jumlah Jiwa</label>
                   <input
@@ -780,7 +828,74 @@ export default function AdminDashboardPage() {
                     type="submit"
                     className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition-colors shadow-xs"
                   >
-                    Simpan
+                    Simpan Data
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* TAMBAH POSYANDU BARU MODAL */}
+      <AnimatePresence>
+        {isPosyanduModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-2xl max-w-md w-full p-6 border border-gray-200 shadow-xl space-y-5"
+            >
+              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                <h3 className="font-extrabold text-base text-gray-900">
+                  Tambah Posyandu Baru
+                </h3>
+                <button onClick={() => setIsPosyanduModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSavePosyandu} className="space-y-4">
+                {/* Field 1: Nama Posyandu Terpisah */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-700 block">Nama Posyandu</label>
+                  <input
+                    type="text"
+                    required
+                    value={formNamaPosyanduBaru}
+                    onChange={e => setFormNamaPosyanduBaru(e.target.value)}
+                    placeholder="Contoh: Posyandu Bougenville 64"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-emerald-500 font-medium"
+                  />
+                </div>
+
+                {/* Field 2: Nama Dusun Terpisah */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-700 block">Nama Dusun / Wilayah</label>
+                  <input
+                    type="text"
+                    required
+                    value={formDusunBaru}
+                    onChange={e => setFormDusunBaru(e.target.value)}
+                    placeholder="Contoh: Krajan / Gumuk Bago"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-emerald-500 font-medium"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => setIsPosyanduModalOpen(false)}
+                    className="flex-1 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-bold text-xs hover:bg-gray-50 transition-colors"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition-colors shadow-xs"
+                  >
+                    Simpan Posyandu
                   </button>
                 </div>
               </form>

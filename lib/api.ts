@@ -118,6 +118,17 @@ export async function getPosyanduList(): Promise<PosyanduOption[]> {
   }
 }
 
+export async function createPosyandu(payload: { nama_posyandu: string; dusun: string }) {
+  const res = await fetch(`${API_BASE_URL}/api/rentan-banjir/posyandu`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Gagal menambahkan posyandu baru');
+  return data;
+}
+
 export async function getKategoriList(): Promise<KategoriOption[]> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/rentan-banjir/kategori`, { cache: 'no-store' });
