@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
-import AuthLayout from '@/components/layout/AuthLayout';
+import { AuthLayout } from '@/components';
 
 export default function ResetPasswordPage() {
   const router = useRouter();

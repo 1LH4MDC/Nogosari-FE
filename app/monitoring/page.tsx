@@ -1,5 +1,6 @@
-import MonitoringPage from "@/components/pages/MonitoringPage";
+import { MonitoringPage } from "@/components";
 
 export default function Page() {
   return <MonitoringPage />;
 }
+

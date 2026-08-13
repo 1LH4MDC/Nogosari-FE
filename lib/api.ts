@@ -1,4 +1,15 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nogosari-be.vercel.app';
+import {
+  AuthResponse,
+  SensorReading,
+  SensorDevice,
+  ThresholdUpdatePayload,
+  RentanBanjirData,
+  RentanBanjirPayload,
+  PengaduanData,
+  PengaduanPayload,
+} from '@/types';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://nogosari-be.vercel.app/';
 
 // Helper to get auth header from localStorage
 function getAuthHeaders() {
@@ -10,13 +21,13 @@ function getAuthHeaders() {
 }
 
 // 1. Auth API
-export async function loginAdmin(email: string, password: string) {
+export async function loginAdmin(email: string, password: string): Promise<AuthResponse> {
   const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
-  const data = await res.json();
+  const data: AuthResponse = await res.json();
   if (!res.ok) {
     throw new Error(data.error || data.message || 'Login gagal. Periksa kembali email dan password Anda.');
   }
@@ -37,7 +48,7 @@ export function logoutAdmin() {
 }
 
 // 2. Sensor IoT API
-export async function getLatestSensorReading() {
+export async function getLatestSensorReading(): Promise<SensorReading | null> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/sensor/latest`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Gagal mengambil data sensor terbaru');
@@ -48,7 +59,7 @@ export async function getLatestSensorReading() {
   }
 }
 
-export async function getSensorHistory(limit = 50) {
+export async function getSensorHistory(limit = 50): Promise<SensorReading[]> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/sensor/history?limit=${limit}`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Gagal mengambil riwayat sensor');
@@ -59,7 +70,7 @@ export async function getSensorHistory(limit = 50) {
   }
 }
 
-export async function getSensorDevices() {
+export async function getSensorDevices(): Promise<SensorDevice[]> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/sensor/devices`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Gagal mengambil daftar perangkat sensor');
@@ -70,11 +81,7 @@ export async function getSensorDevices() {
   }
 }
 
-export async function updateSensorThreshold(idSensor: string, thresholds: {
-  threshold_waspada?: number;
-  threshold_siaga?: number;
-  threshold_bahaya?: number;
-}) {
+export async function updateSensorThreshold(idSensor: string, thresholds: ThresholdUpdatePayload) {
   const res = await fetch(`${API_BASE_URL}/api/sensor/devices/${idSensor}/threshold`, {
     method: 'PUT',
     headers: getAuthHeaders(),
@@ -86,7 +93,7 @@ export async function updateSensorThreshold(idSensor: string, thresholds: {
 }
 
 // 3. Kelompok Rentan Banjir API
-export async function getRentanBanjirData() {
+export async function getRentanBanjirData(): Promise<RentanBanjirData[]> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/rentan-banjir`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Gagal mengambil data kelompok rentan');
@@ -97,7 +104,7 @@ export async function getRentanBanjirData() {
   }
 }
 
-export async function createRentanBanjirData(payload: { id_posyandu: number; id_kategori: number; jumlah_jiwa: number }) {
+export async function createRentanBanjirData(payload: RentanBanjirPayload) {
   const res = await fetch(`${API_BASE_URL}/api/rentan-banjir`, {
     method: 'POST',
     headers: getAuthHeaders(),
@@ -108,7 +115,7 @@ export async function createRentanBanjirData(payload: { id_posyandu: number; id_
   return data;
 }
 
-export async function updateRentanBanjirData(id: number, payload: { id_posyandu: number; id_kategori: number; jumlah_jiwa: number }) {
+export async function updateRentanBanjirData(id: number, payload: RentanBanjirPayload) {
   const res = await fetch(`${API_BASE_URL}/api/rentan-banjir/${id}`, {
     method: 'PUT',
     headers: getAuthHeaders(),
@@ -130,7 +137,7 @@ export async function deleteRentanBanjirData(id: number) {
 }
 
 // 4. Pengaduan Warga API
-export async function submitPengaduan(payload: { nama_pengirim: string; kontak: string; isi_pengaduan: string }) {
+export async function submitPengaduan(payload: PengaduanPayload) {
   const res = await fetch(`${API_BASE_URL}/api/pengaduan`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -141,7 +148,7 @@ export async function submitPengaduan(payload: { nama_pengirim: string; kontak: 
   return data;
 }
 
-export async function getPengaduanList() {
+export async function getPengaduanList(): Promise<PengaduanData[]> {
   const res = await fetch(`${API_BASE_URL}/api/pengaduan`, {
     headers: getAuthHeaders(),
     cache: 'no-store',
@@ -160,3 +167,4 @@ export async function deletePengaduan(id: number) {
   if (!res.ok) throw new Error(data.message || 'Gagal menghapus pengaduan');
   return data;
 }
+

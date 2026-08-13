@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
-import Logo from '@/components/common/Logo';
+import { Logo } from '@/components/common';
 
 const NAV_LINKS = [
   { name: 'Beranda', href: '/' },

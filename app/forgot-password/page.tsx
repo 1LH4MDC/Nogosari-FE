@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import AuthLayout from '@/components/layout/AuthLayout';
+import { AuthLayout } from '@/components';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();

@@ -24,7 +24,7 @@ export default function Logo({ size = 44, className = "h-11 w-11", iconClassName
   return (
     <div className={`relative flex items-center justify-center ${className}`}>
       <Image
-        src="/logo.png"
+        src="/logo.webp"
         alt="Logo Desa Nogosari"
         width={size}
         height={size}

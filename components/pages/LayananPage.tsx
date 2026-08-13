@@ -47,7 +47,7 @@ const limaSiPrograms: ProgramData[] = [
       icon: 'download',
     },
     mediaType: 'image',
-    imageSrc: '/si-kencana.png',
+    imageSrc: '/si-kencana.webp',
   },
   {
     id: 'si-care',
@@ -61,7 +61,7 @@ const limaSiPrograms: ProgramData[] = [
       icon: 'link',
     },
     mediaType: 'image',
-    imageSrc: '/si-care.png',
+    imageSrc: '/si-care.webp',
   },
   {
     id: 'si-rasa',

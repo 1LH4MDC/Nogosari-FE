@@ -1,5 +1,6 @@
-import DataPage from "@/components/pages/DataPage";
+import { DataPage } from "@/components";
 
 export default function Page() {
   return <DataPage />;
 }
+

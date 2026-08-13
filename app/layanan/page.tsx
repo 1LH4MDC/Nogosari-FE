@@ -1,5 +1,6 @@
-import LayananPage from "@/components/pages/LayananPage";
+import { LayananPage } from "@/components";
 
 export default function Page() {
   return <LayananPage />;
 }
+

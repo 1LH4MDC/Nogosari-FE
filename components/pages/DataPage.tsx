@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ProgressBar from '@/components/common/ProgressBar';
+import { ProgressBar } from '@/components/common';
 
 export interface PosyanduData {
   name: string;

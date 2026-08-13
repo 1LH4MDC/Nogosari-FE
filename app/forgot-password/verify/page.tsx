@@ -2,8 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import AuthLayout from '@/components/layout/AuthLayout';
-import OtpInput from '@/components/common/OtpInput';
+import { AuthLayout, OtpInput } from '@/components';
 
 export default function OtpVerifyPage() {
   const router = useRouter();

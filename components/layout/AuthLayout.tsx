@@ -2,7 +2,7 @@
 
 import React, { ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import Logo from '@/components/common/Logo';
+import { Logo } from '@/components/common';
 import { Droplet, Clock, Signal, Battery } from 'lucide-react';
 
 interface AuthLayoutProps {

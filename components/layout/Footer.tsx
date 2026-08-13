@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { MapPin, Clock } from 'lucide-react';
-import Logo from '@/components/common/Logo';
+import { Logo } from '@/components/common';
 
 export default function Footer() {
   return (

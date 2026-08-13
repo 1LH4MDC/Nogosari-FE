@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
-import AuthLayout from '@/components/layout/AuthLayout';
+import { AuthLayout } from '@/components';
 
 import { loginAdmin } from '@/lib/api';
 

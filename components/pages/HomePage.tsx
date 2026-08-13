@@ -5,6 +5,7 @@ import { Droplet, CheckCircle2, AlertTriangle, XCircle, PhoneCall } from 'lucide
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { getLatestSensorReading } from '@/lib/api';
+import { SensorReading } from '@/types';
 
 interface EmergencyContact {
   name: string;
@@ -20,7 +21,7 @@ const emergencyContacts: EmergencyContact[] = [
 ];
 
 export default function HomePage() {
-  const [sensorData, setSensorData] = useState<{ reading?: number; status_water?: string } | null>(null);
+  const [sensorData, setSensorData] = useState<SensorReading | null>(null);
 
   useEffect(() => {
     async function loadData() {

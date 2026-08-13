@@ -1,5 +1,6 @@
-import ProfilPage from "@/components/pages/ProfilPage";
+import { ProfilPage } from "@/components";
 
 export default function Page() {
   return <ProfilPage />;
 }
+
