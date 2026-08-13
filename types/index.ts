@@ -46,9 +46,11 @@ export interface ThresholdUpdatePayload {
 
 // 3. Kelompok Rentan Banjir Types
 export interface RentanBanjirData {
-  id_rentan: number;
+  id_rentan?: number;
+  id?: number;
   id_posyandu: number;
   nama_posyandu?: string;
+  dusun?: string;
   id_kategori: number;
   nama_kategori?: string;
   jumlah_jiwa: number;
@@ -59,6 +61,24 @@ export interface RentanBanjirPayload {
   id_posyandu: number;
   id_kategori: number;
   jumlah_jiwa: number;
+}
+
+export interface PosyanduOption {
+  id: number;
+  nama_posyandu: string;
+  dusun: string;
+}
+
+export interface KategoriOption {
+  id: number;
+  nama_kategori: string;
+}
+
+export interface RentanBanjirSummary {
+  total_jiwa: number;
+  total_records: number;
+  by_kategori: { id: number; nama_kategori: string; total_jiwa: number }[];
+  by_posyandu: { id: number; nama_posyandu: string; dusun: string; total_jiwa: number }[];
 }
 
 // 4. Pengaduan Warga Types

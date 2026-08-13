@@ -5,6 +5,9 @@ import {
   ThresholdUpdatePayload,
   RentanBanjirData,
   RentanBanjirPayload,
+  PosyanduOption,
+  KategoriOption,
+  RentanBanjirSummary,
   PengaduanData,
   PengaduanPayload,
 } from '@/types';
@@ -101,6 +104,39 @@ export async function getRentanBanjirData(): Promise<RentanBanjirData[]> {
   } catch (error) {
     console.error('getRentanBanjirData Error:', error);
     return [];
+  }
+}
+
+export async function getPosyanduList(): Promise<PosyanduOption[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/rentan-banjir/posyandu`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Gagal mengambil daftar posyandu');
+    return await res.json();
+  } catch (error) {
+    console.error('getPosyanduList Error:', error);
+    return [];
+  }
+}
+
+export async function getKategoriList(): Promise<KategoriOption[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/rentan-banjir/kategori`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Gagal mengambil daftar kategori');
+    return await res.json();
+  } catch (error) {
+    console.error('getKategoriList Error:', error);
+    return [];
+  }
+}
+
+export async function getRentanBanjirSummary(): Promise<RentanBanjirSummary | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/rentan-banjir/summary`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Gagal mengambil ringkasan data kelompok rentan');
+    return await res.json();
+  } catch (error) {
+    console.error('getRentanBanjirSummary Error:', error);
+    return null;
   }
 }
 

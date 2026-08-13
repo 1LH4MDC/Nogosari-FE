@@ -1,10 +1,19 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { MapPin, Clock } from 'lucide-react';
 import { Logo } from '@/components/common';
 
 export default function Footer() {
+  const pathname = usePathname();
+  if (
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/forgot-password')
+  ) {
+    return null;
+  }
   return (
     <footer className="bg-[#f8fafc] border-t border-gray-100 pt-14 pb-8">
       <div className="container mx-auto px-4 md:px-8">

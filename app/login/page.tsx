@@ -22,7 +22,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await loginAdmin(email, password);
-      router.push('/monitoring');
+      router.push('/admin');
     } catch (err: unknown) {
       setErrorMessage(err instanceof Error ? err.message : 'Login gagal');
     } finally {

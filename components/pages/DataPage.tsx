@@ -1,11 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { Clock } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Clock, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ProgressBar } from '@/components/common';
+import { getRentanBanjirData } from '@/lib/api';
+import { RentanBanjirData } from '@/types';
 
-export interface PosyanduData {
+export interface PosyanduGroup {
+  id_posyandu: number;
   name: string;
   dusun: string;
   bayi: number;
@@ -14,60 +17,8 @@ export interface PosyanduData {
   ibuMenyusui: number;
   lansia: number;
   disabilitas: number;
+  totalJiwa: number;
 }
-
-const posyanduList: PosyanduData[] = [
-  {
-    name: 'POSYANDU BOUGENVILLE 59',
-    dusun: 'KRAJAN',
-    bayi: 850,
-    balita: 850,
-    ibuHamil: 680,
-    ibuMenyusui: 1910,
-    lansia: 1910,
-    disabilitas: 5,
-  },
-  {
-    name: 'POSYANDU BOUGENVILLE 60',
-    dusun: 'KRAJAN',
-    bayi: 850,
-    balita: 850,
-    ibuHamil: 680,
-    ibuMenyusui: 1910,
-    lansia: 1910,
-    disabilitas: 810,
-  },
-  {
-    name: 'POSYANDU BOUGENVILLE 61',
-    dusun: 'KRAJAN',
-    bayi: 850,
-    balita: 850,
-    ibuHamil: 680,
-    ibuMenyusui: 1910,
-    lansia: 1910,
-    disabilitas: 810,
-  },
-  {
-    name: 'POSYANDU BOUGENVILLE 62',
-    dusun: 'GUMUK BAGO',
-    bayi: 850,
-    balita: 850,
-    ibuHamil: 680,
-    ibuMenyusui: 1910,
-    lansia: 1910,
-    disabilitas: 810,
-  },
-  {
-    name: 'POSYANDU BOUGENVILLE 63',
-    dusun: 'GUMUK BAGO',
-    bayi: 6,
-    balita: 850,
-    ibuHamil: 680,
-    ibuMenyusui: 1910,
-    lansia: 1910,
-    disabilitas: 810,
-  },
-];
 
 const dusunTabs = [
   { id: 'ALL', label: 'Semua' },
@@ -77,16 +28,93 @@ const dusunTabs = [
 
 export default function DataPage() {
   const [selectedDusun, setSelectedDusun] = useState('ALL');
+  const [rawData, setRawData] = useState<RentanBanjirData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const data = await getRentanBanjirData();
+      if (data) setRawData(data);
+    } catch (err) {
+      console.error('Failed to load rentan data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Group raw DB rows by Posyandu
+  const posyanduMap = new Map<number, PosyanduGroup>();
+  let totalJiwaOverall = 0;
+  let totalBayi = 0;
+  let totalBalita = 0;
+  let totalIbuHamil = 0;
+  let totalIbuMenyusui = 0;
+  let totalLansia = 0;
+  let totalDisabilitas = 0;
+
+  rawData.forEach(item => {
+    const pId = item.id_posyandu;
+    totalJiwaOverall += item.jumlah_jiwa || 0;
+
+    if (!posyanduMap.has(pId)) {
+      posyanduMap.set(pId, {
+        id_posyandu: pId,
+        name: item.nama_posyandu || `POSYANDU #${pId}`,
+        dusun: (item.dusun || 'Krajan').toUpperCase(),
+        bayi: 0,
+        balita: 0,
+        ibuHamil: 0,
+        ibuMenyusui: 0,
+        lansia: 0,
+        disabilitas: 0,
+        totalJiwa: 0,
+      });
+    }
+
+    const group = posyanduMap.get(pId)!;
+    group.totalJiwa += item.jumlah_jiwa || 0;
+
+    const kat = item.id_kategori;
+    const katName = (item.nama_kategori || '').toLowerCase();
+    const count = item.jumlah_jiwa || 0;
+
+    if (kat === 1 || katName.includes('bayi')) {
+      group.bayi += count;
+      totalBayi += count;
+    } else if (kat === 2 || katName.includes('balita')) {
+      group.balita += count;
+      totalBalita += count;
+    } else if (kat === 3 || katName.includes('hamil')) {
+      group.ibuHamil += count;
+      totalIbuHamil += count;
+    } else if (kat === 4 || katName.includes('menyusui')) {
+      group.ibuMenyusui += count;
+      totalIbuMenyusui += count;
+    } else if (kat === 5 || katName.includes('lansia')) {
+      group.lansia += count;
+      totalLansia += count;
+    } else if (kat === 6 || katName.includes('disabilitas')) {
+      group.disabilitas += count;
+      totalDisabilitas += count;
+    }
+  });
+
+  const posyanduList = Array.from(posyanduMap.values());
 
   const filteredList = selectedDusun === 'ALL'
     ? posyanduList
-    : posyanduList.filter((item) => item.dusun === selectedDusun);
+    : posyanduList.filter((item) => item.dusun.includes(selectedDusun));
 
   return (
     <div className="bg-[#f4f7fb] min-h-screen py-10 sm:py-14">
       <div className="container mx-auto px-4 md:px-8 max-w-6xl">
 
-        {/* 1. Header Section (Initial View - Above the Fold) */}
+        {/* 1. Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 25 }}
           animate={{ opacity: 1, y: 0 }}
@@ -102,16 +130,26 @@ export default function DataPage() {
             </p>
           </div>
 
-          <div className="self-start md:self-auto shrink-0 flex items-center gap-2 bg-blue-50/80 border border-blue-100 text-blue-800 text-xs font-semibold px-4 py-2 rounded-full shadow-2xs">
-            <Clock className="h-4 w-4 text-blue-600 shrink-0" />
-            <span>Last updated: Aug 24, 2026</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={fetchData}
+              disabled={loading}
+              className="p-2.5 rounded-full bg-white border border-gray-200 text-gray-600 hover:text-blue-600 shadow-2xs transition-colors"
+              title="Refresh Data DB"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin text-blue-600' : ''}`} />
+            </button>
+            <div className="self-start md:self-auto shrink-0 flex items-center gap-2 bg-blue-50/80 border border-blue-100 text-blue-800 text-xs font-semibold px-4 py-2 rounded-full shadow-2xs">
+              <Clock className="h-4 w-4 text-blue-600 shrink-0" />
+              <span>Database Terhubung Live</span>
+            </div>
           </div>
         </motion.div>
 
         {/* 1B. Top Summary Grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-10">
 
-          {/* Card Kiri: Total Penduduk */}
+          {/* Card Kiri: Total Penduduk Rentan DB */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -122,26 +160,28 @@ export default function DataPage() {
 
             <div className="relative z-10">
               <span className="text-xs uppercase font-extrabold tracking-wider text-gray-400">
-                TOTAL PENDUDUK
+                TOTAL KELOMPOK RENTAN (DB)
               </span>
               <div className="flex items-baseline gap-2 mt-2 mb-6">
-                <span className="text-4xl font-extrabold text-[#1d4ed8]">22.000</span>
+                <span className="text-4xl font-extrabold text-[#1d4ed8]">
+                  {loading ? '...' : totalJiwaOverall.toLocaleString('id-ID')}
+                </span>
                 <span className="text-sm font-semibold text-gray-500">Jiwa</span>
               </div>
 
               <div className="space-y-4 pt-4 border-t border-gray-100">
                 <ProgressBar
-                  label="Laki-laki"
-                  count={2100}
-                  maxCount={4260}
+                  label="Dusun Krajan"
+                  count={posyanduList.filter(p => p.dusun.includes('KRAJAN')).reduce((a, b) => a + b.totalJiwa, 0)}
+                  maxCount={Math.max(totalJiwaOverall, 1)}
                   showPercentage={true}
                   barColor="bg-[#1d4ed8]"
                   height="h-2.5"
                 />
                 <ProgressBar
-                  label="Perempuan"
-                  count={2160}
-                  maxCount={4260}
+                  label="Dusun Gumuk Bago"
+                  count={posyanduList.filter(p => p.dusun.includes('GUMUK')).reduce((a, b) => a + b.totalJiwa, 0)}
+                  maxCount={Math.max(totalJiwaOverall, 1)}
                   showPercentage={true}
                   barColor="bg-[#047857]"
                   height="h-2.5"
@@ -150,7 +190,7 @@ export default function DataPage() {
             </div>
           </motion.div>
 
-          {/* Card Kanan: Distribusi Kelompok Rentan Bencana */}
+          {/* Card Kanan: Distribusi Kelompok Rentan Bencana DB */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -158,22 +198,22 @@ export default function DataPage() {
             className="md:col-span-7 bg-white rounded-2xl p-6 border border-gray-200/70 shadow-xs"
           >
             <span className="text-xs uppercase font-extrabold tracking-wider text-gray-400 block mb-4">
-              DISTRIBUSI KELOMPOK RENTAN BENCANA
+              DISTRIBUSI KELOMPOK RENTAN BENCANA (DB)
             </span>
 
             <div className="grid grid-cols-1 gap-3">
-              <ProgressBar label="Bayi (0-2 th)" count={850} maxCount={2500} barColor="bg-[#1d4ed8]" height="h-2.5" />
-              <ProgressBar label="Balita (2-5 th)" count={850} maxCount={2500} barColor="bg-[#1d4ed8]" height="h-2.5" />
-              <ProgressBar label="Ibu Hamil" count={680} maxCount={2500} barColor="bg-[#1d4ed8]" height="h-2.5" />
-              <ProgressBar label="Ibu Menyusui" count={1910} maxCount={2500} barColor="bg-[#1d4ed8]" height="h-2.5" />
-              <ProgressBar label="Lansia (>60 Tahun)" count={1910} maxCount={2500} barColor="bg-[#1d4ed8]" height="h-2.5" />
-              <ProgressBar label="Disabilitas" count={810} maxCount={2500} barColor="bg-[#1d4ed8]" height="h-2.5" />
+              <ProgressBar label="Bayi (0-2 th)" count={totalBayi} maxCount={Math.max(totalJiwaOverall, 1)} barColor="bg-[#1d4ed8]" height="h-2.5" />
+              <ProgressBar label="Balita (2-5 th)" count={totalBalita} maxCount={Math.max(totalJiwaOverall, 1)} barColor="bg-[#1d4ed8]" height="h-2.5" />
+              <ProgressBar label="Ibu Hamil" count={totalIbuHamil} maxCount={Math.max(totalJiwaOverall, 1)} barColor="bg-[#1d4ed8]" height="h-2.5" />
+              <ProgressBar label="Ibu Menyusui" count={totalIbuMenyusui} maxCount={Math.max(totalJiwaOverall, 1)} barColor="bg-[#1d4ed8]" height="h-2.5" />
+              <ProgressBar label="Lansia (>60 Tahun)" count={totalLansia} maxCount={Math.max(totalJiwaOverall, 1)} barColor="bg-[#1d4ed8]" height="h-2.5" />
+              <ProgressBar label="Disabilitas" count={totalDisabilitas} maxCount={Math.max(totalJiwaOverall, 1)} barColor="bg-[#1d4ed8]" height="h-2.5" />
             </div>
           </motion.div>
 
         </div>
 
-        {/* 2. Tab Filter Dusun (Interaktif) */}
+        {/* 2. Tab Filter Dusun */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -186,10 +226,11 @@ export default function DataPage() {
               <button
                 key={tab.id}
                 onClick={() => setSelectedDusun(tab.id)}
-                className={`relative px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 cursor-pointer ${isActive
+                className={`relative px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 cursor-pointer ${
+                  isActive
                     ? 'bg-[#1d4ed8] text-white shadow-md'
                     : 'bg-blue-100/70 hover:bg-blue-200/80 text-[#1e3a8a]'
-                  }`}
+                }`}
               >
                 {tab.label}
               </button>
@@ -197,40 +238,50 @@ export default function DataPage() {
           })}
         </motion.div>
 
-        {/* 3. Posyandu Breakdown Grid (AnimatePresence & Scroll Reveal) */}
+        {/* 3. Posyandu Breakdown Grid */}
         <motion.div layout className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <AnimatePresence mode="popLayout">
-            {filteredList.map((posyandu, idx) => {
-              const isLastSingle = idx === filteredList.length - 1 && filteredList.length % 2 !== 0;
+            {filteredList.length === 0 ? (
+              <div className="col-span-full bg-white p-8 rounded-2xl text-center text-gray-400 border border-gray-200">
+                Data posyandu sedang dimuat atau belum tersedia.
+              </div>
+            ) : (
+              filteredList.map((posyandu, idx) => {
+                const isLastSingle = idx === filteredList.length - 1 && filteredList.length % 2 !== 0;
 
-              return (
-                <motion.div
-                  key={posyandu.name}
-                  layout
-                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                  transition={{ duration: 0.4, delay: idx * 0.05 }}
-                  className={`bg-white rounded-2xl p-6 border border-gray-200/70 shadow-xs ${isLastSingle ? 'md:col-span-2 md:max-w-xl md:mx-auto w-full' : ''
+                return (
+                  <motion.div
+                    key={posyandu.id_posyandu}
+                    layout
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                    transition={{ duration: 0.4, delay: idx * 0.05 }}
+                    className={`bg-white rounded-2xl p-6 border border-gray-200/70 shadow-xs ${
+                      isLastSingle ? 'md:col-span-2 md:max-w-xl md:mx-auto w-full' : ''
                     }`}
-                >
-                  <div className="mb-4 pb-2 border-b border-gray-100">
-                    <h3 className="font-extrabold text-gray-900 text-sm tracking-wide uppercase">
-                      {posyandu.name} - <span className="text-gray-500">{posyandu.dusun}</span>
-                    </h3>
-                  </div>
+                  >
+                    <div className="mb-4 pb-2 border-b border-gray-100 flex justify-between items-center">
+                      <h3 className="font-extrabold text-gray-900 text-sm tracking-wide uppercase">
+                        {posyandu.name}
+                      </h3>
+                      <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
+                        {posyandu.totalJiwa} Jiwa
+                      </span>
+                    </div>
 
-                  <div className="space-y-3">
-                    <ProgressBar label="Bayi (0-2 th)" count={posyandu.bayi} maxCount={2000} barColor="bg-[#1d4ed8]" height="h-2" />
-                    <ProgressBar label="Balita (2-5 th)" count={posyandu.balita} maxCount={2000} barColor="bg-[#1d4ed8]" height="h-2" />
-                    <ProgressBar label="Ibu Hamil" count={posyandu.ibuHamil} maxCount={2000} barColor="bg-[#1d4ed8]" height="h-2" />
-                    <ProgressBar label="Ibu Menyusui" count={posyandu.ibuMenyusui} maxCount={2000} barColor="bg-[#1d4ed8]" height="h-2" />
-                    <ProgressBar label="Lansia (>60 Tahun)" count={posyandu.lansia} maxCount={2000} barColor="bg-[#1d4ed8]" height="h-2" />
-                    <ProgressBar label="Disabilitas" count={posyandu.disabilitas} maxCount={2000} barColor="bg-[#1d4ed8]" height="h-2" />
-                  </div>
-                </motion.div>
-              );
-            })}
+                    <div className="space-y-3">
+                      <ProgressBar label="Bayi (0-2 th)" count={posyandu.bayi} maxCount={Math.max(posyandu.totalJiwa, 1)} barColor="bg-[#1d4ed8]" height="h-2" />
+                      <ProgressBar label="Balita (2-5 th)" count={posyandu.balita} maxCount={Math.max(posyandu.totalJiwa, 1)} barColor="bg-[#1d4ed8]" height="h-2" />
+                      <ProgressBar label="Ibu Hamil" count={posyandu.ibuHamil} maxCount={Math.max(posyandu.totalJiwa, 1)} barColor="bg-[#1d4ed8]" height="h-2" />
+                      <ProgressBar label="Ibu Menyusui" count={posyandu.ibuMenyusui} maxCount={Math.max(posyandu.totalJiwa, 1)} barColor="bg-[#1d4ed8]" height="h-2" />
+                      <ProgressBar label="Lansia (>60 Tahun)" count={posyandu.lansia} maxCount={Math.max(posyandu.totalJiwa, 1)} barColor="bg-[#1d4ed8]" height="h-2" />
+                      <ProgressBar label="Disabilitas" count={posyandu.disabilitas} maxCount={Math.max(posyandu.totalJiwa, 1)} barColor="bg-[#1d4ed8]" height="h-2" />
+                    </div>
+                  </motion.div>
+                );
+              })
+            )}
           </AnimatePresence>
         </motion.div>
 
@@ -238,4 +289,3 @@ export default function DataPage() {
     </div>
   );
 }
-

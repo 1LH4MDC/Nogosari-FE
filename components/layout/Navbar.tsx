@@ -27,8 +27,11 @@ export default function Navbar() {
   });
 
   const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/forgot-password');
+  const isAdminPage = pathname.startsWith('/admin');
   const actionButtonText = isAuthPage ? 'Kembali' : 'Masuk';
   const actionButtonHref = isAuthPage ? '/' : '/login';
+
+  if (isAdminPage) return null;
 
   return (
     <motion.nav
