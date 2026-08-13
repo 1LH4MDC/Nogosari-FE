@@ -299,6 +299,7 @@ export default function AdminDashboardPage() {
     const query = rentanSearch.toLowerCase();
     return (
       (item.nama_posyandu && item.nama_posyandu.toLowerCase().includes(query)) ||
+      (item.dusun && item.dusun.toLowerCase().includes(query)) ||
       (item.nama_kategori && item.nama_kategori.toLowerCase().includes(query)) ||
       String(item.jumlah_jiwa).includes(query)
     );
@@ -567,7 +568,7 @@ export default function AdminDashboardPage() {
                 type="text"
                 value={rentanSearch}
                 onChange={e => setRentanSearch(e.target.value)}
-                placeholder="Cari nama posyandu atau kategori..."
+                placeholder="Cari nama posyandu, dusun, atau kategori..."
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-xs bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
             </div>
