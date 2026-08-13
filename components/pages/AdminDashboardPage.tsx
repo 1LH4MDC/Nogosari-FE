@@ -22,7 +22,9 @@ import {
   Building,
   Radio,
   FileText,
-  ExternalLink
+  ExternalLink,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import {
   logoutAdmin,
@@ -295,13 +297,67 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const filteredRentan = rentanList.filter(item => {
+  const [expandedPosyanduIds, setExpandedPosyanduIds] = useState<number[]>([]);
+
+  const toggleExpandPosyandu = (posId: number) => {
+    setExpandedPosyanduIds(prev =>
+      prev.includes(posId) ? prev.filter(id => id !== posId) : [...prev, posId]
+    );
+  };
+
+  const groupedPosyanduList = React.useMemo(() => {
+    const map = new Map<number, {
+      id_posyandu: number;
+      nama_posyandu: string;
+      dusun: string;
+      total_jiwa: number;
+      categories: { id_kategori: number; nama_kategori: string; jumlah_jiwa: number }[];
+    }>();
+
+    posyanduOptions.forEach(p => {
+      map.set(p.id, {
+        id_posyandu: p.id,
+        nama_posyandu: p.nama_posyandu,
+        dusun: p.dusun || 'Dusun Krajan',
+        total_jiwa: 0,
+        categories: [],
+      });
+    });
+
+    rentanList.forEach(item => {
+      const pId = item.id_posyandu;
+      if (!map.has(pId)) {
+        map.set(pId, {
+          id_posyandu: pId,
+          nama_posyandu: item.nama_posyandu || `Posyandu #${pId}`,
+          dusun: item.dusun || 'Dusun Krajan',
+          total_jiwa: 0,
+          categories: [],
+        });
+      }
+      const group = map.get(pId)!;
+      const count = item.jumlah_jiwa || 0;
+      group.total_jiwa += count;
+      if (item.id_kategori) {
+        group.categories.push({
+          id_kategori: item.id_kategori,
+          nama_kategori: item.nama_kategori || `Kategori #${item.id_kategori}`,
+          jumlah_jiwa: count,
+        });
+      }
+    });
+
+    return Array.from(map.values());
+  }, [posyanduOptions, rentanList]);
+
+  const filteredGroupedPosyandu = groupedPosyanduList.filter(item => {
     const query = rentanSearch.toLowerCase();
+    if (!query) return true;
     return (
-      (item.nama_posyandu && item.nama_posyandu.toLowerCase().includes(query)) ||
-      (item.dusun && item.dusun.toLowerCase().includes(query)) ||
-      (item.nama_kategori && item.nama_kategori.toLowerCase().includes(query)) ||
-      String(item.jumlah_jiwa).includes(query)
+      item.nama_posyandu.toLowerCase().includes(query) ||
+      item.dusun.toLowerCase().includes(query) ||
+      String(item.total_jiwa).includes(query) ||
+      item.categories.some(c => c.nama_kategori.toLowerCase().includes(query))
     );
   });
 
@@ -582,52 +638,103 @@ export default function AdminDashboardPage() {
                       <th className="px-6 py-3.5">No.</th>
                       <th className="px-6 py-3.5">Nama Posyandu</th>
                       <th className="px-6 py-3.5">Dusun / Wilayah</th>
-                      <th className="px-6 py-3.5">Kategori Rentan</th>
-                      <th className="px-6 py-3.5">Jumlah Jiwa</th>
+                      <th className="px-6 py-3.5">Total Jiwa Rentan</th>
                       <th className="px-6 py-3.5 text-right">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {filteredRentan.length === 0 ? (
+                    {filteredGroupedPosyandu.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
+                        <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
                           Belum ada data kelompok rentan yang ditemukan.
                         </td>
                       </tr>
                     ) : (
-                      filteredRentan.map((item, index) => (
-                        <tr key={item.id ?? item.id_rentan ?? index} className="hover:bg-gray-50/80 transition-colors">
-                          <td className="px-6 py-4 font-bold text-gray-900">{index + 1}</td>
-                          <td className="px-6 py-4 font-bold text-gray-800">{item.nama_posyandu || `Posyandu #${item.id_posyandu}`}</td>
-                          <td className="px-6 py-4">
-                            <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-100">
-                              {item.dusun || 'Dusun Krajan'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100">
-                              {item.nama_kategori || `Kategori #${item.id_kategori}`}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 font-extrabold text-gray-900">{item.jumlah_jiwa} Jiwa</td>
-                          <td className="px-6 py-4 text-right space-x-2">
-                            <button
-                              onClick={() => handleOpenBatchModal(item.id_posyandu, 'EDIT')}
-                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                              title="Edit Data"
+                      filteredGroupedPosyandu.map((item, index) => {
+                        const isExpanded = expandedPosyanduIds.includes(item.id_posyandu);
+                        return (
+                          <React.Fragment key={item.id_posyandu}>
+                            <tr
+                              onClick={() => toggleExpandPosyandu(item.id_posyandu)}
+                              className={`cursor-pointer transition-colors ${
+                                isExpanded ? 'bg-blue-50/40' : 'hover:bg-gray-50/80'
+                              }`}
                             >
-                              <Edit2 className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteRentan(item.id ?? item.id_rentan ?? 0)}
-                              className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              title="Hapus Data"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))
+                              <td className="px-6 py-4 font-bold text-gray-900">{index + 1}</td>
+                              <td className="px-6 py-4 font-extrabold text-gray-900 flex items-center gap-2">
+                                <Building className="h-4 w-4 text-blue-600 shrink-0" />
+                                <span>{item.nama_posyandu}</span>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-100">
+                                  {item.dusun}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-blue-800 border border-blue-200">
+                                  {item.total_jiwa} Jiwa
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-right space-x-2" onClick={e => e.stopPropagation()}>
+                                <button
+                                  onClick={() => toggleExpandPosyandu(item.id_posyandu)}
+                                  className="px-2.5 py-1.5 rounded-lg bg-gray-100 hover:bg-blue-100 text-gray-700 hover:text-blue-700 font-bold text-xs transition-colors inline-flex items-center gap-1"
+                                  title="Lihat Detail Kelompok Rentan"
+                                >
+                                  <span>{isExpanded ? 'Tutup Detail' : 'Detail'}</span>
+                                  {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                                </button>
+
+                                <button
+                                  onClick={() => handleOpenBatchModal(item.id_posyandu, 'EDIT')}
+                                  className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-flex items-center"
+                                  title="Edit Data Posyandu & Kategori"
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </button>
+                              </td>
+                            </tr>
+
+                            {/* EXPANDED ACCORDION ROW: DETAIL 6 KATEGORI RENTAN */}
+                            {isExpanded && (
+                              <tr className="bg-blue-50/30">
+                                <td colSpan={5} className="px-6 py-4 border-t border-b border-blue-100">
+                                  <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-2xs space-y-3">
+                                    <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                                      <h5 className="font-extrabold text-xs text-blue-900 uppercase tracking-wider">
+                                        Rincian Kelompok Rentan — {item.nama_posyandu}
+                                      </h5>
+                                      <span className="text-[11px] font-extrabold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">
+                                        Total: {item.total_jiwa} Jiwa
+                                      </span>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
+                                      {kategoriOptions.map(kat => {
+                                        const found = item.categories.find(c => c.id_kategori === kat.id);
+                                        const count = found ? found.jumlah_jiwa : 0;
+                                        return (
+                                          <div
+                                            key={kat.id}
+                                            className="p-2.5 rounded-lg border border-gray-100 bg-gray-50 flex flex-col items-center justify-center text-center"
+                                          >
+                                            <span className="text-[11px] font-semibold text-gray-500 line-clamp-1">
+                                              {kat.nama_kategori}
+                                            </span>
+                                            <span className="text-sm font-black text-gray-900 mt-0.5">
+                                              {count} <span className="text-[10px] font-bold text-gray-500">Jiwa</span>
+                                            </span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
