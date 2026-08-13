@@ -129,6 +129,22 @@ export async function createPosyandu(payload: { nama_posyandu: string; dusun: st
   return data;
 }
 
+export async function saveBatchRentanBanjir(payload: {
+  id_posyandu?: number;
+  nama_posyandu?: string;
+  dusun?: string;
+  categories: { id_kategori: number; jumlah_jiwa: number }[];
+}) {
+  const res = await fetch(`${API_BASE_URL}/api/rentan-banjir/batch`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Gagal menyimpan data kelompok rentan');
+  return data;
+}
+
 export async function getKategoriList(): Promise<KategoriOption[]> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/rentan-banjir/kategori`, { cache: 'no-store' });

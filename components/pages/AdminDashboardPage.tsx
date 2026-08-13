@@ -34,6 +34,7 @@ import {
   deleteRentanBanjirData,
   getPosyanduList,
   createPosyandu,
+  saveBatchRentanBanjir,
   getKategoriList,
   getPengaduanList,
   deletePengaduan
@@ -75,16 +76,15 @@ export default function AdminDashboardPage() {
   // Rentan State
   const [rentanList, setRentanList] = useState<RentanBanjirData[]>([]);
   const [rentanSearch, setRentanSearch] = useState('');
-  const [isRentanModalOpen, setIsRentanModalOpen] = useState(false);
-  const [editingRentanId, setEditingRentanId] = useState<number | null>(null);
-  const [formPosyandu, setFormPosyandu] = useState<number>(1);
-  const [formKategori, setFormKategori] = useState<number>(1);
-  const [formJumlahJiwa, setFormJumlahJiwa] = useState<number>(1);
-
-  // Posyandu Baru Modal State
-  const [isPosyanduModalOpen, setIsPosyanduModalOpen] = useState(false);
-  const [formNamaPosyanduBaru, setFormNamaPosyanduBaru] = useState('');
-  const [formDusunBaru, setFormDusunBaru] = useState('Krajan');
+  // Batch Form State (Input semua 6 kategori sekaligus per posyandu)
+  const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
+  const [posyanduMode, setPosyanduMode] = useState<'EXISTING' | 'NEW'>('EXISTING');
+  const [selectedPosyanduId, setSelectedPosyanduId] = useState<number>(1);
+  const [newNamaPosyandu, setNewNamaPosyandu] = useState('');
+  const [newDusun, setNewDusun] = useState('Krajan');
+  const [categoryCounts, setCategoryCounts] = useState<{ [key: number]: number }>({
+    1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0
+  });
 
   // Pengaduan State
   const [pengaduanList, setPengaduanList] = useState<PengaduanData[]>([]);
@@ -141,11 +141,10 @@ export default function AdminDashboardPage() {
       if (pengaduan) setPengaduanList(pengaduan);
       if (posyandus && posyandus.length > 0) {
         setPosyanduOptions(posyandus);
-        setFormPosyandu(posyandus[0].id);
+        setSelectedPosyanduId(posyandus[0].id);
       }
       if (kategoris && kategoris.length > 0) {
         setKategoriOptions(kategoris);
-        setFormKategori(kategoris[0].id);
       }
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
@@ -159,61 +158,63 @@ export default function AdminDashboardPage() {
     router.push('/login');
   };
 
-  // --- Handlers: Rentan Banjir CRUD ---
-  const handleOpenRentanModal = (item?: RentanBanjirData) => {
-    if (item) {
-      setEditingRentanId(item.id ?? item.id_rentan ?? null);
-      setFormPosyandu(item.id_posyandu);
-      setFormKategori(item.id_kategori);
-      setFormJumlahJiwa(item.jumlah_jiwa);
-    } else {
-      setEditingRentanId(null);
-      setFormPosyandu(1);
-      setFormKategori(1);
-      setFormJumlahJiwa(1);
-    }
-    setIsRentanModalOpen(true);
+  // --- Handlers: Rentan Banjir Batch Input ---
+  const handleOpenBatchModal = (targetPosyanduId?: number) => {
+    const posId = targetPosyanduId || (posyanduOptions.length > 0 ? posyanduOptions[0].id : 1);
+    setSelectedPosyanduId(posId);
+    setPosyanduMode('EXISTING');
+    setNewNamaPosyandu('');
+    setNewDusun('Krajan');
+
+    // Populate category counts for selected posyandu
+    const counts: { [key: number]: number } = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+    rentanList.filter(r => r.id_posyandu === posId).forEach(r => {
+      if (r.id_kategori) counts[r.id_kategori] = r.jumlah_jiwa || 0;
+    });
+    setCategoryCounts(counts);
+    setIsBatchModalOpen(true);
   };
 
-  const handleSaveRentan = async (e: React.FormEvent) => {
+  const handlePosyanduSelectChange = (posId: number) => {
+    setSelectedPosyanduId(posId);
+    const counts: { [key: number]: number } = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+    rentanList.filter(r => r.id_posyandu === posId).forEach(r => {
+      if (r.id_kategori) counts[r.id_kategori] = r.jumlah_jiwa || 0;
+    });
+    setCategoryCounts(counts);
+  };
+
+  const handleSaveBatch = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const payload = {
-        id_posyandu: Number(formPosyandu),
-        id_kategori: Number(formKategori),
-        jumlah_jiwa: Number(formJumlahJiwa),
-      };
-      if (editingRentanId) {
-        await updateRentanBanjirData(editingRentanId, payload);
-        showFeedback('success', 'Data kelompok rentan berhasil diperbarui!');
-      } else {
-        await createRentanBanjirData(payload);
-        showFeedback('success', 'Data kelompok rentan baru berhasil ditambahkan!');
-      }
-      setIsRentanModalOpen(false);
-      const updated = await getRentanBanjirData();
-      setRentanList(updated);
+      const categoriesPayload = Object.entries(categoryCounts).map(([kId, val]) => ({
+        id_kategori: Number(kId),
+        jumlah_jiwa: Number(val) || 0,
+      }));
+
+      const payload = posyanduMode === 'NEW'
+        ? {
+            nama_posyandu: newNamaPosyandu.trim(),
+            dusun: newDusun.trim(),
+            categories: categoriesPayload,
+          }
+        : {
+            id_posyandu: Number(selectedPosyanduId),
+            categories: categoriesPayload,
+          };
+
+      await saveBatchRentanBanjir(payload);
+      showFeedback('success', 'Data kelompok rentan posyandu berhasil disimpan!');
+      setIsBatchModalOpen(false);
+
+      const [updatedRentan, updatedPosyandus] = await Promise.all([
+        getRentanBanjirData(),
+        getPosyanduList(),
+      ]);
+      if (updatedRentan) setRentanList(updatedRentan);
+      if (updatedPosyandus) setPosyanduOptions(updatedPosyandus);
     } catch (err: unknown) {
       showFeedback('error', err instanceof Error ? err.message : 'Gagal menyimpan data');
-    }
-  };
-
-  const handleSavePosyandu = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formNamaPosyanduBaru.trim()) return;
-    try {
-      const created = await createPosyandu({
-        nama_posyandu: formNamaPosyanduBaru.trim(),
-        dusun: formDusunBaru.trim(),
-      });
-      showFeedback('success', `Posyandu "${created.nama_posyandu}" di Dusun ${created.dusun} berhasil ditambahkan!`);
-      setIsPosyanduModalOpen(false);
-      setFormNamaPosyanduBaru('');
-      const updatedPosyandus = await getPosyanduList();
-      setPosyanduOptions(updatedPosyandus);
-      if (created.id) setFormPosyandu(created.id);
-    } catch (err: unknown) {
-      showFeedback('error', err instanceof Error ? err.message : 'Gagal menambahkan Posyandu baru');
     }
   };
 
@@ -462,7 +463,7 @@ export default function AdminDashboardPage() {
               <h3 className="text-base font-extrabold text-gray-900 mb-4">Aksi Cepat Admin</h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <button
-                  onClick={() => { setActiveTab('rentan'); handleOpenRentanModal(); }}
+                  onClick={() => { setActiveTab('rentan'); handleOpenBatchModal(); }}
                   className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-blue-500 hover:bg-blue-50/50 transition-all text-left group"
                 >
                   <div className="p-2.5 rounded-lg bg-blue-100 text-blue-700 group-hover:bg-blue-600 group-hover:text-white transition-colors">
@@ -512,22 +513,13 @@ export default function AdminDashboardPage() {
                 <h3 className="text-lg font-extrabold text-gray-900">Kelompok Rentan Banjir (SI-Care)</h3>
                 <p className="text-xs text-gray-500">Kelola data prioritas evakuasi kelompok rentan posyandu desa.</p>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  onClick={() => setIsPosyanduModalOpen(true)}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition-colors shadow-xs"
-                >
-                  <Building className="h-4 w-4" />
-                  Tambah Posyandu Baru
-                </button>
-                <button
-                  onClick={() => handleOpenRentanModal()}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition-colors shadow-xs"
-                >
-                  <Plus className="h-4 w-4" />
-                  Tambah Data Rentan
-                </button>
-              </div>
+              <button
+                onClick={() => handleOpenBatchModal()}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition-colors shadow-xs"
+              >
+                <Plus className="h-4 w-4" />
+                Tambah / Input Data Posyandu
+              </button>
             </div>
 
             {/* Search Filter */}
@@ -575,7 +567,7 @@ export default function AdminDashboardPage() {
                           <td className="px-6 py-4 font-extrabold text-gray-900">{item.jumlah_jiwa} Jiwa</td>
                           <td className="px-6 py-4 text-right space-x-2">
                             <button
-                              onClick={() => handleOpenRentanModal(item)}
+                              onClick={() => handleOpenBatchModal(item.id_posyandu)}
                               className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                               title="Edit Data"
                             >
@@ -744,158 +736,148 @@ export default function AdminDashboardPage() {
         )}
       </div>
 
-      {/* RENTAN MODAL */}
+      {/* SINGLE UNIFIED BATCH INPUT MODAL (SEKALIGUS INPUT 6 KATEGORI) */}
       <AnimatePresence>
-        {isRentanModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+        {isBatchModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs overflow-y-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-2xl max-w-md w-full p-6 border border-gray-200 shadow-xl space-y-5"
+              className="bg-white rounded-2xl max-w-xl w-full p-6 border border-gray-200 shadow-xl space-y-5 my-8"
             >
               <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                <h3 className="font-extrabold text-base text-gray-900">
-                  {editingRentanId ? 'Edit Data Kelompok Rentan' : 'Tambah Data Kelompok Rentan'}
-                </h3>
-                <button onClick={() => setIsRentanModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1">
+                <div>
+                  <h3 className="font-extrabold text-base text-gray-900">
+                    Input Data Kelompok Rentan Posyandu
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    Masukkan jumlah jiwa sekaligus untuk seluruh 6 kategori rentan.
+                  </p>
+                </div>
+                <button onClick={() => setIsBatchModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1">
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
-              <form onSubmit={handleSaveRentan} className="space-y-4">
-                {/* Input 1: Nama Posyandu */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-700 block">Nama Posyandu</label>
-                  <select
-                    value={formPosyandu}
-                    onChange={e => setFormPosyandu(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-blue-500 font-bold"
+              <form onSubmit={handleSaveBatch} className="space-y-5">
+
+                {/* Mode Selector: Existing vs New Posyandu */}
+                <div className="flex rounded-xl bg-gray-100 p-1 text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setPosyanduMode('EXISTING')}
+                    className={`flex-1 py-2 rounded-lg transition-all ${
+                      posyanduMode === 'EXISTING' ? 'bg-white text-blue-700 shadow-2xs font-extrabold' : 'text-gray-600 hover:text-gray-900'
+                    }`}
                   >
-                    {posyanduOptions.map(p => (
-                      <option key={p.id} value={p.id}>{p.nama_posyandu}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Input 2: Dusun (Ditampilkan terpisah) */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-700 block">Wilayah / Dusun Posyandu</label>
-                  <input
-                    type="text"
-                    disabled
-                    value={posyanduOptions.find(p => p.id === formPosyandu)?.dusun || 'Krajan'}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs bg-gray-50 text-gray-700 font-bold"
-                  />
-                </div>
-
-                {/* Input 3: Kategori Rentan */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-700 block">Kategori Rentan</label>
-                  <select
-                    value={formKategori}
-                    onChange={e => setFormKategori(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-blue-500"
+                    Pilih Posyandu Yang Sudah Ada
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPosyanduMode('NEW')}
+                    className={`flex-1 py-2 rounded-lg transition-all ${
+                      posyanduMode === 'NEW' ? 'bg-white text-emerald-700 shadow-2xs font-extrabold' : 'text-gray-600 hover:text-gray-900'
+                    }`}
                   >
-                    {kategoriOptions.map(k => (
-                      <option key={k.id} value={k.id}>{k.nama_kategori}</option>
-                    ))}
-                  </select>
+                    + Buat Posyandu Baru
+                  </button>
                 </div>
 
-                {/* Input 4: Jumlah Jiwa */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-700 block">Jumlah Jiwa</label>
-                  <input
-                    type="number"
-                    min={1}
-                    required
-                    value={formJumlahJiwa}
-                    onChange={e => setFormJumlahJiwa(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-blue-500"
-                  />
+                {posyanduMode === 'EXISTING' ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-gray-700 block">Nama Posyandu</label>
+                      <select
+                        value={selectedPosyanduId}
+                        onChange={e => handlePosyanduSelectChange(Number(e.target.value))}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-blue-500 font-bold bg-white"
+                      >
+                        {posyanduOptions.map(p => (
+                          <option key={p.id} value={p.id}>{p.nama_posyandu}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-gray-700 block">Wilayah / Dusun</label>
+                      <input
+                        type="text"
+                        disabled
+                        value={posyanduOptions.find(p => p.id === selectedPosyanduId)?.dusun || 'Krajan'}
+                        className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs bg-gray-100 text-gray-700 font-bold"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-gray-700 block">Nama Posyandu Baru</label>
+                      <input
+                        type="text"
+                        required
+                        value={newNamaPosyandu}
+                        onChange={e => setNewNamaPosyandu(e.target.value)}
+                        placeholder="Misal: Posyandu Bougenville 64"
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-emerald-500 font-bold bg-white"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-gray-700 block">Nama Dusun / Wilayah</label>
+                      <input
+                        type="text"
+                        required
+                        value={newDusun}
+                        onChange={e => setNewDusun(e.target.value)}
+                        placeholder="Misal: Krajan / Gumuk Bago"
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-emerald-500 font-bold bg-white"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 6 Kategori Input Grid */}
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <label className="text-xs uppercase tracking-wider font-extrabold text-gray-500">
+                      JUMLAH JIWA PER KATEGORI RENTAN
+                    </label>
+                    <span className="text-xs font-extrabold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">
+                      Total: {Object.values(categoryCounts).reduce((a, b) => Number(a) + Number(b || 0), 0)} Jiwa
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {kategoriOptions.map(kat => (
+                      <div key={kat.id} className="flex items-center justify-between p-3 rounded-xl border border-gray-200 bg-gray-50/50 hover:bg-white transition-colors">
+                        <span className="text-xs font-bold text-gray-800">{kat.nama_kategori}</span>
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="number"
+                            min={0}
+                            value={categoryCounts[kat.id] ?? 0}
+                            onChange={e => setCategoryCounts({ ...categoryCounts, [kat.id]: Math.max(0, Number(e.target.value)) })}
+                            className="w-20 px-2.5 py-1.5 rounded-lg border border-gray-300 text-xs text-right font-extrabold focus:outline-none focus:border-blue-500 bg-white"
+                          />
+                          <span className="text-[11px] font-semibold text-gray-500">Jiwa</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="flex gap-3 pt-4 border-t border-gray-100">
                   <button
                     type="button"
-                    onClick={() => setIsRentanModalOpen(false)}
+                    onClick={() => setIsBatchModalOpen(false)}
                     className="flex-1 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-bold text-xs hover:bg-gray-50 transition-colors"
                   >
                     Batal
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition-colors shadow-xs"
+                    className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition-colors shadow-xs font-extrabold"
                   >
-                    Simpan Data
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* TAMBAH POSYANDU BARU MODAL */}
-      <AnimatePresence>
-        {isPosyanduModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-2xl max-w-md w-full p-6 border border-gray-200 shadow-xl space-y-5"
-            >
-              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                <h3 className="font-extrabold text-base text-gray-900">
-                  Tambah Posyandu Baru
-                </h3>
-                <button onClick={() => setIsPosyanduModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleSavePosyandu} className="space-y-4">
-                {/* Field 1: Nama Posyandu Terpisah */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-700 block">Nama Posyandu</label>
-                  <input
-                    type="text"
-                    required
-                    value={formNamaPosyanduBaru}
-                    onChange={e => setFormNamaPosyanduBaru(e.target.value)}
-                    placeholder="Contoh: Posyandu Bougenville 64"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-emerald-500 font-medium"
-                  />
-                </div>
-
-                {/* Field 2: Nama Dusun Terpisah */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-700 block">Nama Dusun / Wilayah</label>
-                  <input
-                    type="text"
-                    required
-                    value={formDusunBaru}
-                    onChange={e => setFormDusunBaru(e.target.value)}
-                    placeholder="Contoh: Krajan / Gumuk Bago"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-emerald-500 font-medium"
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-4 border-t border-gray-100">
-                  <button
-                    type="button"
-                    onClick={() => setIsPosyanduModalOpen(false)}
-                    className="flex-1 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-bold text-xs hover:bg-gray-50 transition-colors"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition-colors shadow-xs"
-                  >
-                    Simpan Posyandu
+                    Simpan Semua Data Posyandu
                   </button>
                 </div>
               </form>
