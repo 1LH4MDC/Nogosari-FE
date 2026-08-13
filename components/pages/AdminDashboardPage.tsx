@@ -660,9 +660,8 @@ export default function AdminDashboardPage() {
                               }`}
                             >
                               <td className="px-6 py-4 font-bold text-gray-900">{index + 1}</td>
-                              <td className="px-6 py-4 font-extrabold text-gray-900 flex items-center gap-2">
-                                <Building className="h-4 w-4 text-blue-600 shrink-0" />
-                                <span>{item.nama_posyandu}</span>
+                              <td className="px-6 py-4 font-extrabold text-gray-900">
+                                {item.nama_posyandu}
                               </td>
                               <td className="px-6 py-4">
                                 <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-100">
