@@ -78,6 +78,7 @@ export default function AdminDashboardPage() {
   const [rentanSearch, setRentanSearch] = useState('');
   // Batch Form State (Input semua 6 kategori sekaligus per posyandu)
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
+  const [batchModalAction, setBatchModalAction] = useState<'ADD' | 'EDIT'>('ADD');
   const [posyanduMode, setPosyanduMode] = useState<'EXISTING' | 'NEW'>('EXISTING');
   const [selectedPosyanduId, setSelectedPosyanduId] = useState<number>(1);
   const [newNamaPosyandu, setNewNamaPosyandu] = useState('');
@@ -159,7 +160,8 @@ export default function AdminDashboardPage() {
   };
 
   // --- Handlers: Rentan Banjir Batch Input ---
-  const handleOpenBatchModal = (targetPosyanduId?: number) => {
+  const handleOpenBatchModal = (targetPosyanduId?: number, action: 'ADD' | 'EDIT' = 'ADD') => {
+    setBatchModalAction(action);
     const posId = targetPosyanduId || (posyanduOptions.length > 0 ? posyanduOptions[0].id : 1);
     setSelectedPosyanduId(posId);
     setPosyanduMode('EXISTING');
@@ -527,11 +529,11 @@ export default function AdminDashboardPage() {
                 <p className="text-xs text-gray-500">Kelola data prioritas evakuasi kelompok rentan posyandu desa.</p>
               </div>
               <button
-                onClick={() => handleOpenBatchModal()}
+                onClick={() => handleOpenBatchModal(undefined, 'ADD')}
                 className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition-colors shadow-xs"
               >
                 <Plus className="h-4 w-4" />
-                Tambah / Input Data Posyandu
+                Tambah Data Posyandu
               </button>
             </div>
 
@@ -580,7 +582,7 @@ export default function AdminDashboardPage() {
                           <td className="px-6 py-4 font-extrabold text-gray-900">{item.jumlah_jiwa} Jiwa</td>
                           <td className="px-6 py-4 text-right space-x-2">
                             <button
-                              onClick={() => handleOpenBatchModal(item.id_posyandu)}
+                              onClick={() => handleOpenBatchModal(item.id_posyandu, 'EDIT')}
                               className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                               title="Edit Data"
                             >
@@ -762,10 +764,10 @@ export default function AdminDashboardPage() {
               <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                 <div>
                   <h3 className="font-extrabold text-base text-gray-900">
-                    Input Data Kelompok Rentan Posyandu
+                    {batchModalAction === 'EDIT' ? 'Edit Data Kelompok Rentan Posyandu' : 'Tambah Data Kelompok Rentan Posyandu'}
                   </h3>
                   <p className="text-xs text-gray-500">
-                    Masukkan jumlah jiwa sekaligus untuk seluruh 6 kategori rentan.
+                    {batchModalAction === 'EDIT' ? 'Perbarui jumlah jiwa untuk 6 kategori rentan.' : 'Masukkan jumlah jiwa sekaligus untuk seluruh 6 kategori rentan.'}
                   </p>
                 </div>
                 <button onClick={() => setIsBatchModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1">
@@ -775,36 +777,39 @@ export default function AdminDashboardPage() {
 
               <form onSubmit={handleSaveBatch} className="space-y-5">
 
-                {/* Mode Selector: Existing vs New Posyandu */}
-                <div className="flex rounded-xl bg-gray-100 p-1 text-xs font-bold">
-                  <button
-                    type="button"
-                    onClick={() => setPosyanduMode('EXISTING')}
-                    className={`flex-1 py-2 rounded-lg transition-all ${
-                      posyanduMode === 'EXISTING' ? 'bg-white text-blue-700 shadow-2xs font-extrabold' : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    Pilih Posyandu Yang Sudah Ada
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPosyanduMode('NEW')}
-                    className={`flex-1 py-2 rounded-lg transition-all ${
-                      posyanduMode === 'NEW' ? 'bg-white text-emerald-700 shadow-2xs font-extrabold' : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    + Buat Posyandu Baru
-                  </button>
-                </div>
+                {/* Mode Selector: Hanya tampil di mode TAMBAH */}
+                {batchModalAction === 'ADD' ? (
+                  <div className="flex rounded-xl bg-gray-100 p-1 text-xs font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setPosyanduMode('EXISTING')}
+                      className={`flex-1 py-2 rounded-lg transition-all ${
+                        posyanduMode === 'EXISTING' ? 'bg-white text-blue-700 shadow-2xs font-extrabold' : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      Pilih Posyandu Yang Sudah Ada
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPosyanduMode('NEW')}
+                      className={`flex-1 py-2 rounded-lg transition-all ${
+                        posyanduMode === 'NEW' ? 'bg-white text-emerald-700 shadow-2xs font-extrabold' : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      + Buat Posyandu Baru
+                    </button>
+                  </div>
+                ) : null}
 
-                {posyanduMode === 'EXISTING' ? (
+                {posyanduMode === 'EXISTING' || batchModalAction === 'EDIT' ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-gray-700 block">Nama Posyandu</label>
                       <select
+                        disabled={batchModalAction === 'EDIT'}
                         value={selectedPosyanduId}
                         onChange={e => handlePosyanduSelectChange(Number(e.target.value))}
-                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-blue-500 font-bold bg-white"
+                        className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs focus:outline-none focus:border-blue-500 font-bold bg-white disabled:bg-gray-100 disabled:text-gray-700"
                       >
                         {posyanduOptions.map(p => (
                           <option key={p.id} value={p.id}>{p.nama_posyandu}</option>
@@ -888,9 +893,9 @@ export default function AdminDashboardPage() {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition-colors shadow-xs font-extrabold"
+                    className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition-colors shadow-xs"
                   >
-                    Simpan Semua Data Posyandu
+                    {batchModalAction === 'EDIT' ? 'Simpan Perubahan Data Posyandu' : 'Tambah Data Posyandu'}
                   </button>
                 </div>
               </form>
