@@ -44,11 +44,11 @@ interface LogItem {
 }
 
 const initialLogs: LogItem[] = [
-  { id: '1', time: 'Hari Ini, 14:45 WIB', level: '3.5m', status: 'Normal' },
-  { id: '2', time: 'Hari Ini, 14:30 WIB', level: '3.2m', status: 'Normal' },
-  { id: '3', time: 'Hari Ini, 13:00 WIB', level: '3.1m', status: 'Normal' },
-  { id: '4', time: 'Hari Ini, 10:15 WIB', level: '2.4m', status: 'Waspada' },
-  { id: '5', time: 'Kemarin, 23:50 WIB', level: '1.2m', status: 'Bahaya' },
+  { id: '1', time: 'Hari Ini, 14:45 WIB', level: '3.45m', status: 'Normal' },
+  { id: '2', time: 'Hari Ini, 14:30 WIB', level: '3.44m', status: 'Normal' },
+  { id: '3', time: 'Hari Ini, 14:00 WIB', level: '3.45m', status: 'Normal' },
+  { id: '4', time: 'Hari Ini, 10:15 WIB', level: '2.40m', status: 'Waspada' },
+  { id: '5', time: 'Kemarin, 23:50 WIB', level: '1.50m', status: 'Bahaya' },
 ];
 
 export default function MonitoringPage() {
@@ -58,6 +58,7 @@ export default function MonitoringPage() {
   const [signalQuality, setSignalQuality] = useState('Kuat (-65dBm)');
   const [lastUpdated, setLastUpdated] = useState('Hari ini, 14:30 WIB');
   const [historyData, setHistoryData] = useState<{ time: string; level: number }[]>([]);
+  const [logs, setLogs] = useState<LogItem[]>(initialLogs);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -83,6 +84,30 @@ export default function MonitoringPage() {
             level: (item.water_level || item.reading || 0) / 100,
           })).reverse();
           setHistoryData(formatted);
+
+          // Synchronize recent logs with real readings from sensor history
+          const mappedLogs: LogItem[] = history.slice(0, 5).map((item: any, idx: number) => {
+            const meters = (item.water_level || item.reading || 0) / 100;
+            let status: 'Normal' | 'Waspada' | 'Bahaya' = 'Normal';
+            if (meters < 2.0) status = 'Bahaya';
+            else if (meters <= 3.0) status = 'Waspada';
+            else status = 'Normal';
+
+            const timeStr = item.created_at
+              ? new Date(item.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB'
+              : `Bacaan #${idx + 1}`;
+
+            return {
+              id: item.id ? String(item.id) : String(idx),
+              time: `Hari Ini, ${timeStr}`,
+              level: `${meters.toFixed(2)}m`,
+              status,
+            };
+          });
+
+          if (mappedLogs.length > 0) {
+            setLogs(mappedLogs);
+          }
         }
       } catch (err) {
         console.error('Error fetching live monitoring data:', err);
@@ -385,29 +410,40 @@ export default function MonitoringPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="lg:col-span-6 bg-white rounded-2xl p-6 border border-gray-200/70 shadow-xs"
+            className="lg:col-span-6 bg-white rounded-2xl p-6 border border-gray-200/70 shadow-xs flex flex-col justify-between"
           >
-            <h2 className="text-lg font-extrabold text-gray-900 mb-5">
-              Log Aktivitas Terakhir
-            </h2>
+            <div>
+              <h2 className="text-lg font-extrabold text-gray-900 mb-1">
+                Log Pembacaan Terakhir Sensor
+              </h2>
+              <p className="text-xs text-gray-400 font-medium mb-5">
+                Riwayat catatan jarak permukaan air ke alat ultrasonik.
+              </p>
+            </div>
 
-            <div className="space-y-4">
-              {initialLogs.map((log) => {
-                const getDotColor = (s: string) => {
-                  if (s === 'Normal') return 'bg-emerald-500';
-                  if (s === 'Waspada') return 'bg-amber-500';
-                  return 'bg-rose-500';
+            <div className="space-y-3">
+              {logs.map((log) => {
+                const getStatusBadge = (s: string) => {
+                  if (s === 'Normal') return { dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
+                  if (s === 'Waspada') return { dot: 'bg-amber-500', badge: 'bg-amber-50 text-amber-800 border-amber-200' };
+                  return { dot: 'bg-rose-500', badge: 'bg-rose-800 text-rose-800 border-rose-200' };
                 };
+                const badgeStyle = getStatusBadge(log.status);
 
                 return (
-                  <div key={log.id} className="flex items-start gap-3 text-xs sm:text-sm">
-                    <span className={`h-2.5 w-2.5 rounded-full mt-1 shrink-0 ${getDotColor(log.status)}`} />
-                    <div className="flex flex-col">
-                      <span className="text-gray-400 text-xs font-semibold">{log.time}</span>
-                      <span className="font-bold text-gray-800">
-                        Ketinggian Air : {log.level} ({log.status})
-                      </span>
+                  <div key={log.id} className="flex items-center justify-between p-3 rounded-xl bg-gray-50/70 border border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${badgeStyle.dot}`} />
+                      <div className="flex flex-col">
+                        <span className="text-gray-400 text-[11px] font-semibold">{log.time}</span>
+                        <span className="font-bold text-gray-800 text-xs sm:text-sm">
+                          Jarak ke Sensor: {log.level}
+                        </span>
+                      </div>
                     </div>
+                    <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${badgeStyle.badge}`}>
+                      {log.status}
+                    </span>
                   </div>
                 );
               })}

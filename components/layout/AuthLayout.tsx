@@ -19,7 +19,7 @@ export default function AuthLayout({
   showLogoHeader = true,
 }: AuthLayoutProps) {
   return (
-    <div className="bg-white min-h-[calc(100vh-80px)] flex flex-col justify-center py-10 sm:py-14 px-4 md:px-8">
+    <div className="bg-white min-h-[calc(100vh-80px)] flex flex-col justify-center py-6 sm:py-12 px-4 md:px-8">
       <div className="container mx-auto max-w-6xl">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
 
@@ -33,35 +33,22 @@ export default function AuthLayout({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
-              className="space-y-6"
+              className="space-y-5 sm:space-y-6"
             >
-              {/* Logo Header */}
-              {showLogoHeader && (
-                <div className="flex items-center gap-3 mb-2">
-                  <Logo size={44} className="h-11 w-11 shrink-0" />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-extrabold text-[#1e3a8a] leading-tight">
-                      Desa Nogosari Tangguh Bencana
-                    </span>
-                    <span className="text-xs text-gray-500 font-medium">Kabupaten Jember</span>
-                  </div>
-                </div>
-              )}
-
               {/* Title & Subtitle */}
               <div>
-                <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+                <h1 className="text-2xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
                   {title}
                 </h1>
                 {subtitle && (
-                  <p className="text-sm text-gray-500 mt-1.5 font-medium leading-relaxed">
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-1.5 font-medium leading-relaxed">
                     {subtitle}
                   </p>
                 )}
               </div>
 
               {/* Form Input Slot */}
-              <div className="pt-2">{children}</div>
+              <div className="pt-1 sm:pt-2">{children}</div>
             </motion.div>
           </div>
 
