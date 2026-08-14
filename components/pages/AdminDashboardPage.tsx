@@ -92,6 +92,7 @@ export default function AdminDashboardPage() {
   // Status & Feedback
   const [loading, setLoading] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   // Dynamic Posyandu, Dusun & Kategori Options from DB
   const [posyanduOptions, setPosyanduOptions] = useState<{ id: number; nama_posyandu: string; dusun: string }[]>([]);
@@ -149,10 +150,12 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleLogout = () => {
-    if (!window.confirm('Apakah Anda yakin ingin keluar dari halaman Admin?')) {
-      return;
-    }
+  const handleLogoutClick = () => {
+    setIsLogoutModalOpen(true);
+  };
+
+  const handleConfirmLogout = () => {
+    setIsLogoutModalOpen(false);
     logoutAdmin();
     router.push('/login');
   };
@@ -400,7 +403,7 @@ export default function AdminDashboardPage() {
             </div>
 
             <button
-              onClick={handleLogout}
+              onClick={handleLogoutClick}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-bold text-xs transition-colors"
             >
               <LogOut className="h-4 w-4" />
@@ -880,6 +883,51 @@ export default function AdminDashboardPage() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* CUSTOM LOGOUT CONFIRMATION POPUP MODAL */}
+      <AnimatePresence>
+        {isLogoutModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-white rounded-2xl max-w-sm w-full p-6 border border-gray-100 shadow-2xl space-y-5 text-center"
+            >
+              <div className="mx-auto w-14 h-14 rounded-full bg-red-50 text-red-600 flex items-center justify-center">
+                <LogOut className="h-7 w-7" />
+              </div>
+
+              <div className="space-y-1.5">
+                <h3 className="text-lg font-black text-gray-900">
+                  Konfirmasi Keluar
+                </h3>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  Apakah Anda yakin ingin keluar dari halaman Admin Dashboard Desa Nogosari?
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsLogoutModalOpen(false)}
+                  className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-bold text-xs hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmLogout}
+                  className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs transition-colors shadow-xs cursor-pointer"
+                >
+                  Ya, Keluar
+                </button>
+              </div>
             </motion.div>
           </div>
         )}
