@@ -150,6 +150,9 @@ export default function AdminDashboardPage() {
   };
 
   const handleLogout = () => {
+    if (!window.confirm('Apakah Anda yakin ingin keluar dari halaman Admin?')) {
+      return;
+    }
     logoutAdmin();
     router.push('/login');
   };
