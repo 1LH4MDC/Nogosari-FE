@@ -44,11 +44,11 @@ interface LogItem {
 }
 
 const initialLogs: LogItem[] = [
-  { id: '1', time: 'Hari Ini, 14:45 WIB', level: '1.2m', status: 'Normal' },
-  { id: '2', time: 'Hari Ini, 14:30 WIB', level: '1.2m', status: 'Normal' },
-  { id: '3', time: 'Hari Ini, 13:00 WIB', level: '1.2m', status: 'Normal' },
-  { id: '4', time: 'Hari Ini, 10:15 WIB', level: '2.6m', status: 'Waspada' },
-  { id: '5', time: 'Kemarin, 23:50 WIB', level: '4.2m', status: 'Bahaya' },
+  { id: '1', time: 'Hari Ini, 14:45 WIB', level: '3.5m', status: 'Normal' },
+  { id: '2', time: 'Hari Ini, 14:30 WIB', level: '3.2m', status: 'Normal' },
+  { id: '3', time: 'Hari Ini, 13:00 WIB', level: '3.1m', status: 'Normal' },
+  { id: '4', time: 'Hari Ini, 10:15 WIB', level: '2.4m', status: 'Waspada' },
+  { id: '5', time: 'Kemarin, 23:50 WIB', level: '1.2m', status: 'Bahaya' },
 ];
 
 export default function MonitoringPage() {
@@ -103,13 +103,14 @@ export default function MonitoringPage() {
 
   const getStatusConfig = (cm: number) => {
     const meters = cm / 100;
-    if (meters < 2.0) {
+    // Semakin kecil jarak ke sensor (semakin dekat) = semakin tinggi air = semakin bahaya
+    if (meters > 3.0) {
       return {
         label: 'NORMAL',
         bgColor: 'bg-[#6ee7b7]',
         textColor: 'text-emerald-950',
       };
-    } else if (meters <= 3.0) {
+    } else if (meters >= 2.0) {
       return {
         label: 'WASPADA',
         bgColor: 'bg-amber-300',
@@ -322,7 +323,7 @@ export default function MonitoringPage() {
                   <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                   <span className="font-bold text-gray-800 text-xs sm:text-sm">Normal</span>
                 </div>
-                <span className="font-bold text-gray-700 text-xs sm:text-sm">&lt; 2.0 m</span>
+                <span className="font-bold text-gray-700 text-xs sm:text-sm">&gt; 3.0 m</span>
               </div>
 
               {/* Waspada */}
@@ -340,7 +341,7 @@ export default function MonitoringPage() {
                   <XCircle className="h-4 w-4 text-rose-700 shrink-0" />
                   <span className="font-bold text-rose-900 text-xs sm:text-sm">Bahaya</span>
                 </div>
-                <span className="font-bold text-rose-900 text-xs sm:text-sm">&gt; 4.0 m</span>
+                <span className="font-bold text-rose-900 text-xs sm:text-sm">&lt; 2.0 m</span>
               </div>
             </div>
           </motion.div>
