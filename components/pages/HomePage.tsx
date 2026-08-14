@@ -33,7 +33,7 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, []);
 
-  const waterLevel = sensorData?.reading !== undefined ? `${sensorData.reading} cm` : '69 cm';
+  const waterLevel = sensorData?.reading !== undefined ? `${sensorData.reading} cm` : '345 cm';
   const waterStatus = sensorData?.status_water ? sensorData.status_water.toUpperCase() : 'NORMAL';
 
   // Dynamic status banner styling based on IoT status

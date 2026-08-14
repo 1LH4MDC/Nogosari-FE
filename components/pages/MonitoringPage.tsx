@@ -6,34 +6,34 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine
 } from 'recharts';
 import { getLatestSensorReading, getSensorHistory } from '@/lib/api';
 
 const chartData24h = [
-  { time: '00:00', level: 0.5 },
-  { time: '06:00', level: 1.2 },
-  { time: '12:00', level: 1.3 },
-  { time: '18:00', level: 2.1 },
-  { time: 'Sekarang', level: 0.69 },
+  { time: '00:00', level: 3.6 },
+  { time: '06:00', level: 3.4 },
+  { time: '12:00', level: 3.5 },
+  { time: '18:00', level: 2.8 },
+  { time: 'Sekarang', level: 3.45 },
 ];
 
 const chartData1h = [
-  { time: '14:00', level: 0.68 },
-  { time: '14:10', level: 0.68 },
-  { time: '14:20', level: 0.69 },
-  { time: '14:30', level: 0.69 },
-  { time: 'Sekarang', level: 0.69 },
+  { time: '14:00', level: 3.45 },
+  { time: '14:10', level: 3.48 },
+  { time: '14:20', level: 3.46 },
+  { time: '14:30', level: 3.44 },
+  { time: 'Sekarang', level: 3.45 },
 ];
 
 const chartData7d = [
-  { time: 'Sen', level: 0.8 },
-  { time: 'Sel', level: 1.1 },
-  { time: 'Rab', level: 1.4 },
-  { time: 'Kam', level: 2.2 },
-  { time: 'Jum', level: 1.0 },
-  { time: 'Sab', level: 0.7 },
-  { time: 'Ming', level: 0.69 },
+  { time: 'Sen', level: 3.6 },
+  { time: 'Sel', level: 3.4 },
+  { time: 'Rab', level: 3.2 },
+  { time: 'Kam', level: 2.6 },
+  { time: 'Jum', level: 3.1 },
+  { time: 'Sab', level: 3.5 },
+  { time: 'Ming', level: 3.45 },
 ];
 
 interface LogItem {
@@ -53,7 +53,7 @@ const initialLogs: LogItem[] = [
 
 export default function MonitoringPage() {
   const [activeTab, setActiveTab] = useState<'1Jam' | '1Hari' | '7Hari'>('1Hari');
-  const [waterLevelCm, setWaterLevelCm] = useState(69);
+  const [waterLevelCm, setWaterLevelCm] = useState(345);
   const [batteryLevel, setBatteryLevel] = useState(95);
   const [signalQuality, setSignalQuality] = useState('Kuat (-65dBm)');
   const [lastUpdated, setLastUpdated] = useState('Hari ini, 14:30 WIB');
@@ -218,10 +218,17 @@ export default function MonitoringPage() {
           transition={{ duration: 0.6, delay: 0.15 }}
           className="bg-white rounded-2xl p-6 border border-gray-200/70 shadow-xs mb-6"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <h2 className="text-lg font-extrabold text-gray-900">
-              Grafik Ketinggian Air ({activeTab === '1Jam' ? '1 Jam Terakhir' : activeTab === '7Hari' ? '7 Hari Terakhir' : '24 Jam Terakhir'})
-            </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <div>
+              <h2 className="text-lg font-extrabold text-gray-900">
+                Grafik Jarak Permukaan Air ({activeTab === '1Jam' ? '1 Jam Terakhir' : activeTab === '7Hari' ? '7 Hari Terakhir' : '24 Jam Terakhir'})
+              </h2>
+              <div className="flex items-center gap-3 mt-1 text-[11px] font-bold text-gray-500">
+                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Normal (&gt;3.0m)</span>
+                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-500" /> Waspada (2.0-3.0m)</span>
+                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-rose-500" /> Bahaya (&lt;2.0m)</span>
+              </div>
+            </div>
 
             {/* Time Filter Toggle */}
             <div className="flex items-center gap-1 bg-gray-100/80 p-1 rounded-xl text-xs font-semibold self-start sm:self-auto">
@@ -285,8 +292,10 @@ export default function MonitoringPage() {
                       fontSize: '12px',
                       fontWeight: 600,
                     }}
-                    formatter={(val: any) => [`${val} Meter`, 'Ketinggian Air']}
+                    formatter={(val: any) => [`${val} Meter`, 'Jarak dari Sensor']}
                   />
+                  <ReferenceLine y={3.0} stroke="#f59e0b" strokeDasharray="4 4" strokeWidth={1.5} />
+                  <ReferenceLine y={2.0} stroke="#ef4444" strokeDasharray="4 4" strokeWidth={1.5} />
                   <Area
                     type="monotone"
                     dataKey="level"
