@@ -224,9 +224,9 @@ export default function MonitoringPage() {
                 Grafik Jarak Permukaan Air ({activeTab === '1Jam' ? '1 Jam Terakhir' : activeTab === '7Hari' ? '7 Hari Terakhir' : '24 Jam Terakhir'})
               </h2>
               <div className="flex items-center gap-3 mt-1 text-[11px] font-bold text-gray-500">
-                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Normal (&gt;3.0m)</span>
-                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-500" /> Waspada (2.0-3.0m)</span>
                 <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-rose-500" /> Bahaya (&lt;2.0m)</span>
+                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-500" /> Waspada (2.0-3.0m)</span>
+                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Normal (&gt;3.0m)</span>
               </div>
             </div>
 
@@ -276,10 +276,11 @@ export default function MonitoringPage() {
                     dy={10}
                   />
                   <YAxis
+                    reversed
                     axisLine={false}
                     tickLine={false}
-                    domain={[0, 5]}
-                    ticks={[0, 1.0, 2.0, 3.0, 4.0, 5.0]}
+                    domain={[0.5, 5]}
+                    ticks={[1.0, 2.0, 3.0, 4.0, 5.0]}
                     tickFormatter={(val) => `${val.toFixed(1)}m`}
                     tick={{ fill: '#64748b', fontSize: 11 }}
                   />
@@ -294,8 +295,8 @@ export default function MonitoringPage() {
                     }}
                     formatter={(val: any) => [`${val} Meter`, 'Jarak dari Sensor']}
                   />
-                  <ReferenceLine y={3.0} stroke="#f59e0b" strokeDasharray="4 4" strokeWidth={1.5} />
                   <ReferenceLine y={2.0} stroke="#ef4444" strokeDasharray="4 4" strokeWidth={1.5} />
+                  <ReferenceLine y={3.0} stroke="#f59e0b" strokeDasharray="4 4" strokeWidth={1.5} />
                   <Area
                     type="monotone"
                     dataKey="level"
@@ -326,13 +327,13 @@ export default function MonitoringPage() {
             </h2>
 
             <div className="space-y-3">
-              {/* Normal */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-50/60 border-l-4 border-emerald-500">
+              {/* Bahaya */}
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-rose-100/70 border-l-4 border-rose-500">
                 <div className="flex items-center gap-2.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                  <span className="font-bold text-gray-800 text-xs sm:text-sm">Normal</span>
+                  <XCircle className="h-4 w-4 text-rose-700 shrink-0" />
+                  <span className="font-bold text-rose-900 text-xs sm:text-sm">Bahaya</span>
                 </div>
-                <span className="font-bold text-gray-700 text-xs sm:text-sm">&gt; 3.0 m</span>
+                <span className="font-bold text-rose-900 text-xs sm:text-sm">&lt; 2.0 m</span>
               </div>
 
               {/* Waspada */}
@@ -344,13 +345,13 @@ export default function MonitoringPage() {
                 <span className="font-bold text-gray-700 text-xs sm:text-sm">2.0 - 3.0 m</span>
               </div>
 
-              {/* Bahaya */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-rose-100/70 border-l-4 border-rose-500">
+              {/* Normal */}
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-50/60 border-l-4 border-emerald-500">
                 <div className="flex items-center gap-2.5">
-                  <XCircle className="h-4 w-4 text-rose-700 shrink-0" />
-                  <span className="font-bold text-rose-900 text-xs sm:text-sm">Bahaya</span>
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span className="font-bold text-gray-800 text-xs sm:text-sm">Normal</span>
                 </div>
-                <span className="font-bold text-rose-900 text-xs sm:text-sm">&lt; 2.0 m</span>
+                <span className="font-bold text-gray-700 text-xs sm:text-sm">&gt; 3.0 m</span>
               </div>
             </div>
           </motion.div>
