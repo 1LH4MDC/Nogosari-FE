@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea
 } from 'recharts';
 import { getLatestSensorReading, getSensorHistory } from '@/lib/api';
 
@@ -106,7 +106,7 @@ export default function MonitoringPage() {
     // Semakin kecil jarak ke sensor (semakin dekat) = semakin tinggi air = semakin bahaya
     if (meters > 3.0) {
       return {
-        label: 'NORMAL',
+        label: 'NORMAL (Aman)',
         bgColor: 'bg-[#6ee7b7]',
         textColor: 'text-emerald-950',
       };
@@ -142,25 +142,28 @@ export default function MonitoringPage() {
           <div className="lg:col-span-8 bg-white rounded-2xl p-6 sm:p-8 border border-gray-200/70 shadow-xs flex flex-col justify-between">
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-2">
-                Sistem Monitoring Ketinggian Air Sungai
+                Monitoring Jarak Permukaan Air Sungai
               </h1>
               <p className="text-sm text-gray-500 font-medium">
-                Real-time IoT Sensor Data - Sungai Nogosari
+                Sensor IoT Ultrasonik Jarak Bebas (Freeboard) — Sungai Nogosari
               </p>
             </div>
 
-            <div className="mt-8">
+            <div className="mt-8 space-y-2">
               <div className={`w-full rounded-2xl ${currentStatus.bgColor} px-6 py-4 flex items-center justify-between shadow-xs transition-all duration-300`}>
                 <span className={`text-xs sm:text-sm font-extrabold uppercase tracking-wider ${currentStatus.textColor}`}>
-                  STATUS SAAT INI
+                  JARAK KE SENSOR
                 </span>
 
                 <div className={`flex items-center gap-3 font-extrabold ${currentStatus.textColor}`}>
                   <Droplet className="h-6 w-6 fill-current shrink-0" />
-                  <span className="text-2xl sm:text-3xl">{waterLevelCm} cm</span>
+                  <span className="text-2xl sm:text-3xl">{(waterLevelCm / 100).toFixed(2)} m</span>
                   <span className="text-lg sm:text-2xl tracking-wide ml-2">{currentStatus.label}</span>
                 </div>
               </div>
+              <p className="text-[11px] text-gray-400 font-semibold text-right">
+                *Diukur dari sensor di atas jembatan/tiang ke permukaan air sungai (semakin dekat = air naik).
+              </p>
             </div>
           </div>
 
@@ -221,12 +224,12 @@ export default function MonitoringPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div>
               <h2 className="text-lg font-extrabold text-gray-900">
-                Grafik Jarak Permukaan Air ({activeTab === '1Jam' ? '1 Jam Terakhir' : activeTab === '7Hari' ? '7 Hari Terakhir' : '24 Jam Terakhir'})
+                Grafik Tren Jarak Bebas Permukaan Air ({activeTab === '1Jam' ? '1 Jam Terakhir' : activeTab === '7Hari' ? '7 Hari Terakhir' : '24 Jam Terakhir'})
               </h2>
-              <div className="flex items-center gap-3 mt-1 text-[11px] font-bold text-gray-500">
-                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-rose-500" /> Bahaya (&lt;2.0m)</span>
-                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-500" /> Waspada (2.0-3.0m)</span>
-                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Normal (&gt;3.0m)</span>
+              <div className="flex flex-wrap items-center gap-3 mt-1.5 text-[11px] font-bold text-gray-600">
+                <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200"><span className="h-2 w-2 rounded-full bg-rose-500" /> Bahaya (&lt;2.0m)</span>
+                <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200"><span className="h-2 w-2 rounded-full bg-amber-500" /> Waspada (2.0-3.0m)</span>
+                <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Normal (&gt;3.0m)</span>
               </div>
             </div>
 
@@ -263,11 +266,17 @@ export default function MonitoringPage() {
                 <AreaChart data={getChartData()} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="waterGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#1d4ed8" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="#1d4ed8" stopOpacity={0.03} />
+                      <stop offset="5%" stopColor="#1d4ed8" stopOpacity={0.45} />
+                      <stop offset="95%" stopColor="#1d4ed8" stopOpacity={0.05} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  
+                  {/* Colored Zone Background Bands */}
+                  <ReferenceArea y1={0.5} y2={2.0} fill="#fecdd3" fillOpacity={0.25} />
+                  <ReferenceArea y1={2.0} y2={3.0} fill="#fef3c7" fillOpacity={0.25} />
+                  <ReferenceArea y1={3.0} y2={5.0} fill="#d1fae5" fillOpacity={0.25} />
+
                   <XAxis
                     dataKey="time"
                     axisLine={false}
@@ -279,7 +288,7 @@ export default function MonitoringPage() {
                     reversed
                     axisLine={false}
                     tickLine={false}
-                    domain={[0.5, 5]}
+                    domain={[0.5, 5.0]}
                     ticks={[1.0, 2.0, 3.0, 4.0, 5.0]}
                     tickFormatter={(val) => `${val.toFixed(1)}m`}
                     tick={{ fill: '#64748b', fontSize: 11 }}
@@ -293,7 +302,7 @@ export default function MonitoringPage() {
                       fontSize: '12px',
                       fontWeight: 600,
                     }}
-                    formatter={(val: any) => [`${val} Meter`, 'Jarak dari Sensor']}
+                    formatter={(val: any) => [`${val} Meter`, 'Jarak Permukaan ke Sensor']}
                   />
                   <ReferenceLine y={2.0} stroke="#ef4444" strokeDasharray="4 4" strokeWidth={1.5} />
                   <ReferenceLine y={3.0} stroke="#f59e0b" strokeDasharray="4 4" strokeWidth={1.5} />
@@ -322,36 +331,50 @@ export default function MonitoringPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="lg:col-span-6 bg-white rounded-2xl p-6 border border-gray-200/70 shadow-xs flex flex-col justify-between"
           >
-            <h2 className="text-lg font-extrabold text-gray-900 mb-5">
-              Indikator Ambang Batas (Jarak Dari Alat)
-            </h2>
+            <div>
+              <h2 className="text-lg font-extrabold text-gray-900 mb-1">
+                Indikator Ambang Batas (Jarak Bebas Sensor)
+              </h2>
+              <p className="text-xs text-gray-400 font-medium mb-5">
+                Jarak pantulan gelombang ultrasonik dari sensor atas ke permukaan air.
+              </p>
+            </div>
 
             <div className="space-y-3">
               {/* Bahaya */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-rose-100/70 border-l-4 border-rose-500">
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-rose-50/70 border-l-4 border-rose-500">
                 <div className="flex items-center gap-2.5">
                   <XCircle className="h-4 w-4 text-rose-700 shrink-0" />
-                  <span className="font-bold text-rose-900 text-xs sm:text-sm">Bahaya</span>
+                  <div>
+                    <span className="font-extrabold text-rose-900 text-xs sm:text-sm block">Bahaya</span>
+                    <span className="text-[11px] text-rose-600 font-medium">Air sangat dekat dengan sensor (siaga meluap)</span>
+                  </div>
                 </div>
-                <span className="font-bold text-rose-900 text-xs sm:text-sm">&lt; 2.0 m</span>
+                <span className="font-black text-rose-900 text-xs sm:text-sm">&lt; 2.0 m</span>
               </div>
 
               {/* Waspada */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-amber-50/60 border-l-4 border-amber-500">
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-amber-50/70 border-l-4 border-amber-500">
                 <div className="flex items-center gap-2.5">
                   <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
-                  <span className="font-bold text-gray-800 text-xs sm:text-sm">Waspada</span>
+                  <div>
+                    <span className="font-extrabold text-amber-900 text-xs sm:text-sm block">Waspada</span>
+                    <span className="text-[11px] text-amber-700 font-medium">Permukaan air mulai naik mendekati batas</span>
+                  </div>
                 </div>
-                <span className="font-bold text-gray-700 text-xs sm:text-sm">2.0 - 3.0 m</span>
+                <span className="font-black text-amber-900 text-xs sm:text-sm">2.0 - 3.0 m</span>
               </div>
 
               {/* Normal */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-50/60 border-l-4 border-emerald-500">
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-50/70 border-l-4 border-emerald-500">
                 <div className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                  <span className="font-bold text-gray-800 text-xs sm:text-sm">Normal</span>
+                  <div>
+                    <span className="font-extrabold text-emerald-900 text-xs sm:text-sm block">Normal / Aman</span>
+                    <span className="text-[11px] text-emerald-700 font-medium">Permukaan air stabil jauh di bawah sensor</span>
+                  </div>
                 </div>
-                <span className="font-bold text-gray-700 text-xs sm:text-sm">&gt; 3.0 m</span>
+                <span className="font-black text-emerald-900 text-xs sm:text-sm">&gt; 3.0 m</span>
               </div>
             </div>
           </motion.div>
