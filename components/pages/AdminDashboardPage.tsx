@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   Users,
   MessageSquare,
-  Sliders,
   LogOut,
   Plus,
   Trash2,
@@ -29,8 +28,6 @@ import {
 import {
   logoutAdmin,
   getLatestSensorReading,
-  getSensorDevices,
-  updateSensorThreshold,
   getRentanBanjirData,
   createRentanBanjirData,
   updateRentanBanjirData,
@@ -47,7 +44,6 @@ import {
 } from '@/lib/api';
 import {
   SensorReading,
-  SensorDevice,
   RentanBanjirData,
   PengaduanData,
   DusunOption
@@ -69,16 +65,11 @@ const KATEGORI_OPTIONS = [
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'overview' | 'rentan' | 'pengaduan' | 'threshold'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'rentan' | 'pengaduan'>('overview');
   const [adminName, setAdminName] = useState('Pengurus Desa');
 
   // Sensor State
   const [sensorReading, setSensorReading] = useState<SensorReading | null>(null);
-  const [devices, setDevices] = useState<SensorDevice[]>([]);
-  const [selectedDevice, setSelectedDevice] = useState<string>('');
-  const [thresholdWaspada, setThresholdWaspada] = useState<number>(100);
-  const [thresholdSiaga, setThresholdSiaga] = useState<number>(200);
-  const [thresholdBahaya, setThresholdBahaya] = useState<number>(300);
 
   // Rentan State
   const [rentanList, setRentanList] = useState<RentanBanjirData[]>([]);
@@ -130,9 +121,8 @@ export default function AdminDashboardPage() {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [sensor, devs, rentan, pengaduan, posyandus, kategoris, dusuns] = await Promise.all([
+      const [sensor, rentan, pengaduan, posyandus, kategoris, dusuns] = await Promise.all([
         getLatestSensorReading(),
-        getSensorDevices(),
         getRentanBanjirData(),
         getPengaduanList().catch(() => []),
         getPosyanduList().catch(() => []),
@@ -140,13 +130,6 @@ export default function AdminDashboardPage() {
         getDusunList().catch(() => []),
       ]);
       if (sensor) setSensorReading(sensor);
-      if (devs && devs.length > 0) {
-        setDevices(devs);
-        setSelectedDevice(devs[0].id_sensor);
-        setThresholdWaspada(devs[0].threshold_waspada || 100);
-        setThresholdSiaga(devs[0].threshold_siaga || 200);
-        setThresholdBahaya(devs[0].threshold_bahaya || 300);
-      }
       if (rentan) setRentanList(rentan);
       if (pengaduan) setPengaduanList(pengaduan);
       if (posyandus && posyandus.length > 0) {
@@ -298,22 +281,6 @@ export default function AdminDashboardPage() {
       setPengaduanList(prev => prev.filter(p => p.id_pengaduan !== id));
     } catch (err: unknown) {
       showFeedback('error', err instanceof Error ? err.message : 'Gagal menghapus pengaduan');
-    }
-  };
-
-  // --- Handlers: Threshold Settings ---
-  const handleSaveThreshold = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedDevice) return;
-    try {
-      await updateSensorThreshold(selectedDevice, {
-        threshold_waspada: Number(thresholdWaspada),
-        threshold_siaga: Number(thresholdSiaga),
-        threshold_bahaya: Number(thresholdBahaya),
-      });
-      showFeedback('success', 'Batas threshold sensor berhasil diperbarui!');
-    } catch (err: unknown) {
-      showFeedback('error', err instanceof Error ? err.message : 'Gagal memperbarui threshold');
     }
   };
 
@@ -469,14 +436,13 @@ export default function AdminDashboardPage() {
             { id: 'overview', label: 'Ringkasan System', icon: LayoutDashboard },
             { id: 'rentan', label: 'Kelompok Rentan (SI-Care)', icon: Users },
             { id: 'pengaduan', label: 'Pengaduan Warga', icon: MessageSquare },
-            { id: 'threshold', label: 'Pengaturan Sensor IoT', icon: Sliders },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as 'overview' | 'rentan' | 'pengaduan' | 'threshold')}
+                onClick={() => setActiveTab(tab.id as 'overview' | 'rentan' | 'pengaduan')}
                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all whitespace-nowrap cursor-pointer ${
                   isActive
                     ? 'bg-blue-600 text-white shadow-sm'
@@ -559,7 +525,7 @@ export default function AdminDashboardPage() {
             {/* Quick Actions Panel */}
             <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-xs">
               <h3 className="text-base font-extrabold text-gray-900 mb-4">Aksi Cepat Admin</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button
                   onClick={() => { setActiveTab('rentan'); handleOpenBatchModal(); }}
                   className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-blue-500 hover:bg-blue-50/50 transition-all text-left group"
@@ -583,19 +549,6 @@ export default function AdminDashboardPage() {
                   <div>
                     <p className="font-bold text-sm text-gray-900">Cek Pengaduan Warga</p>
                     <p className="text-xs text-gray-500">Lihat laporan masyarakat</p>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('threshold')}
-                  className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-indigo-500 hover:bg-indigo-50/50 transition-all text-left group"
-                >
-                  <div className="p-2.5 rounded-lg bg-indigo-100 text-indigo-700 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                    <Sliders className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-sm text-gray-900">Kalibrasi Sensor IoT</p>
-                    <p className="text-xs text-gray-500">Atur batas peringatan dini</p>
                   </div>
                 </button>
               </div>
@@ -806,93 +759,6 @@ export default function AdminDashboardPage() {
                   </div>
                 ))
               )}
-            </div>
-          </motion.div>
-        )}
-
-        {/* TAB 4: THRESHOLD SETTINGS */}
-        {activeTab === 'threshold' && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto space-y-6">
-            <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 shadow-xs space-y-6">
-              <div>
-                <h3 className="text-lg font-extrabold text-gray-900">Pengaturan Threshold Sensor IoT</h3>
-                <p className="text-xs text-gray-500">Sesuaikan ambang batas peringatan dini ketinggian air (cm) untuk memicu notifikasi siaga.</p>
-              </div>
-
-              <form onSubmit={handleSaveThreshold} className="space-y-5">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-700 block">Pilih Perangkat Sensor</label>
-                  <select
-                    value={selectedDevice}
-                    onChange={e => {
-                      const devId = e.target.value;
-                      setSelectedDevice(devId);
-                      const match = devices.find(d => d.id_sensor === devId);
-                      if (match) {
-                        setThresholdWaspada(match.threshold_waspada);
-                        setThresholdSiaga(match.threshold_siaga);
-                        setThresholdBahaya(match.threshold_bahaya);
-                      }
-                    }}
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-xs bg-white focus:outline-none focus:border-blue-500"
-                  >
-                    {devices.length === 0 ? (
-                      <option value="">Sensor Utama Gumuk Bago</option>
-                    ) : (
-                      devices.map(d => (
-                        <option key={d.id_sensor} value={d.id_sensor}>
-                          {d.nama_sensor} ({d.lokasi})
-                        </option>
-                      ))
-                    )}
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                  <div className="space-y-1.5 bg-amber-50/60 p-4 rounded-xl border border-amber-200">
-                    <label className="text-xs font-bold text-amber-800 block">Waspada (cm)</label>
-                    <input
-                      type="number"
-                      required
-                      value={thresholdWaspada}
-                      onChange={e => setThresholdWaspada(Number(e.target.value))}
-                      className="w-full px-3 py-2 rounded-lg border border-amber-300 text-xs bg-white font-bold"
-                    />
-                    <p className="text-[10px] text-amber-600">Peringatan awal</p>
-                  </div>
-
-                  <div className="space-y-1.5 bg-orange-50/60 p-4 rounded-xl border border-orange-200">
-                    <label className="text-xs font-bold text-orange-800 block">Siaga (cm)</label>
-                    <input
-                      type="number"
-                      required
-                      value={thresholdSiaga}
-                      onChange={e => setThresholdSiaga(Number(e.target.value))}
-                      className="w-full px-3 py-2 rounded-lg border border-orange-300 text-xs bg-white font-bold"
-                    />
-                    <p className="text-[10px] text-orange-600">Persiapan evakuasi</p>
-                  </div>
-
-                  <div className="space-y-1.5 bg-red-50/60 p-4 rounded-xl border border-red-200">
-                    <label className="text-xs font-bold text-red-800 block">Bahaya (cm)</label>
-                    <input
-                      type="number"
-                      required
-                      value={thresholdBahaya}
-                      onChange={e => setThresholdBahaya(Number(e.target.value))}
-                      className="w-full px-3 py-2 rounded-lg border border-red-300 text-xs bg-white font-bold"
-                    />
-                    <p className="text-[10px] text-red-600">Evakuasi darurat</p>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition-colors shadow-xs mt-4"
-                >
-                  Simpan Perubahan Threshold
-                </button>
-              </form>
             </div>
           </motion.div>
         )}

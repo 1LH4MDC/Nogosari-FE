@@ -312,7 +312,7 @@ export default function MonitoringPage() {
             className="lg:col-span-6 bg-white rounded-2xl p-6 border border-gray-200/70 shadow-xs flex flex-col justify-between"
           >
             <h2 className="text-lg font-extrabold text-gray-900 mb-5">
-              Indikator Ambang Batas
+              Indikator Ambang Batas (Jarak Dari Alat)
             </h2>
 
             <div className="space-y-3">
