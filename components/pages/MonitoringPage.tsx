@@ -53,52 +53,80 @@ const initialLogs: LogItem[] = [
 
 export default function MonitoringPage() {
   const [activeTab, setActiveTab] = useState<'1Jam' | '1Hari' | '7Hari'>('1Hari');
-  const [waterLevelCm, setWaterLevelCm] = useState(345);
-  const [batteryLevel, setBatteryLevel] = useState(95);
-  const [signalQuality, setSignalQuality] = useState('Kuat (-65dBm)');
-  const [lastUpdated, setLastUpdated] = useState('Hari ini, 14:30 WIB');
+  const [waterLevelCm, setWaterLevelCm] = useState<number | null>(null);
+  const [batteryLevel, setBatteryLevel] = useState<number | null>(null);
+  const [signalQuality, setSignalQuality] = useState<string>('-');
+  const [lastUpdated, setLastUpdated] = useState<string>('Menghubungkan ke Backend...');
   const [historyData, setHistoryData] = useState<{ time: string; level: number }[]>([]);
-  const [logs, setLogs] = useState<LogItem[]>(initialLogs);
+  const [logs, setLogs] = useState<LogItem[]>([]);
   const [isMounted, setIsMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     setIsMounted(true);
 
     async function fetchData() {
       try {
-        const latest = await getLatestSensorReading();
-        if (latest) {
-          if (latest.reading !== undefined) setWaterLevelCm(latest.reading);
-          if (latest.battery !== undefined) setBatteryLevel(latest.battery);
-          if (latest.signal) setSignalQuality(latest.signal);
-          if (latest.timestamp) {
-            const timeStr = new Date(latest.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-            setLastUpdated(`Hari ini, ${timeStr} WIB`);
+        const latest: any = await getLatestSensorReading();
+        if (latest && !latest.message) {
+          // Robust mapping for reading / ketinggian_air / distance
+          const rawReading = latest.ketinggian_air ?? latest.reading ?? latest.water_level ?? latest.jarak ?? latest.distance;
+          if (rawReading !== undefined && rawReading !== null) {
+            setWaterLevelCm(Number(rawReading));
           }
+          if (latest.battery !== undefined && latest.battery !== null) {
+            setBatteryLevel(Number(latest.battery));
+          }
+          if (latest.signal) setSignalQuality(latest.signal);
+          
+          const rawTime = latest.waktu_bacaan || latest.created_at || latest.timestamp || latest.updated_at;
+          if (rawTime) {
+            const dateObj = new Date(rawTime);
+            if (!isNaN(dateObj.getTime())) {
+              const timeStr = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+              setLastUpdated(`Hari ini, ${timeStr} WIB`);
+            }
+          }
+        } else if (latest?.message) {
+          setLastUpdated('Menunggu kiriman data dari IoT...');
         }
 
-        const history = await getSensorHistory(20);
-        if (Array.isArray(history) && history.length > 0) {
-          const formatted = history.map((item: any) => ({
-            time: item.created_at ? new Date(item.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : (item.time || '00:00'),
-            level: (item.water_level || item.reading || 0) / 100,
-          })).reverse();
+        const historyRes: any = await getSensorHistory(30);
+        const historyList = Array.isArray(historyRes) 
+          ? historyRes 
+          : (historyRes?.data && Array.isArray(historyRes.data) ? historyRes.data : []);
+
+        if (historyList.length > 0) {
+          const formatted = historyList.map((item: any) => {
+            const rawItemReading = item.ketinggian_air ?? item.water_level ?? item.reading ?? item.jarak ?? item.distance ?? 0;
+            const rawItemTime = item.waktu_bacaan || item.created_at || item.timestamp || item.time;
+            const timeFormatted = rawItemTime
+              ? new Date(rawItemTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+              : '00:00';
+
+            return {
+              time: timeFormatted,
+              level: Number(rawItemReading) / 100,
+            };
+          }).reverse();
           setHistoryData(formatted);
 
           // Synchronize recent logs with real readings from sensor history
-          const mappedLogs: LogItem[] = history.slice(0, 5).map((item: any, idx: number) => {
-            const meters = (item.water_level || item.reading || 0) / 100;
+          const mappedLogs: LogItem[] = historyList.slice(0, 6).map((item: any, idx: number) => {
+            const rawItemReading = item.ketinggian_air ?? item.water_level ?? item.reading ?? item.jarak ?? item.distance ?? 0;
+            const meters = Number(rawItemReading) / 100;
             let status: 'Normal' | 'Waspada' | 'Bahaya' = 'Normal';
             if (meters < 2.0) status = 'Bahaya';
             else if (meters <= 3.0) status = 'Waspada';
             else status = 'Normal';
 
-            const timeStr = item.created_at
-              ? new Date(item.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB'
+            const rawItemTime = item.waktu_bacaan || item.created_at || item.timestamp;
+            const timeStr = rawItemTime
+              ? new Date(rawItemTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB'
               : `Bacaan #${idx + 1}`;
 
             return {
-              id: item.id ? String(item.id) : String(idx),
+              id: item.id_bacaan ? String(item.id_bacaan) : item.id ? String(item.id) : String(idx),
               time: `Hari Ini, ${timeStr}`,
               level: `${meters.toFixed(2)}m`,
               status,
@@ -109,8 +137,10 @@ export default function MonitoringPage() {
             setLogs(mappedLogs);
           }
         }
+        setIsLoading(false);
       } catch (err) {
         console.error('Error fetching live monitoring data:', err);
+        setIsLoading(false);
       }
     }
 
@@ -120,13 +150,17 @@ export default function MonitoringPage() {
   }, []);
 
   const getChartData = () => {
-    if (historyData.length > 0 && activeTab === '1Hari') return historyData;
-    if (activeTab === '1Jam') return chartData1h;
-    if (activeTab === '7Hari') return chartData7d;
-    return chartData24h;
+    return historyData;
   };
 
-  const getStatusConfig = (cm: number) => {
+  const getStatusConfig = (cm: number | null) => {
+    if (cm === null) {
+      return {
+        label: 'MENUNGGU DATA',
+        bgColor: 'bg-slate-200',
+        textColor: 'text-slate-700',
+      };
+    }
     const meters = cm / 100;
     // Semakin kecil jarak ke sensor (semakin dekat) = semakin tinggi air = semakin bahaya
     if (meters > 3.0) {
@@ -182,7 +216,9 @@ export default function MonitoringPage() {
 
                 <div className={`flex items-center gap-3 font-extrabold ${currentStatus.textColor}`}>
                   <Droplet className="h-6 w-6 fill-current shrink-0" />
-                  <span className="text-2xl sm:text-3xl">{(waterLevelCm / 100).toFixed(2)} m</span>
+                  <span className="text-2xl sm:text-3xl">
+                    {waterLevelCm !== null ? `${(waterLevelCm / 100).toFixed(2)} m` : '-'}
+                  </span>
                   <span className="text-lg sm:text-2xl tracking-wide ml-2">{currentStatus.label}</span>
                 </div>
               </div>
@@ -214,9 +250,9 @@ export default function MonitoringPage() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 font-semibold mb-0.5">Status Sensor</p>
-                  <p className="font-bold text-emerald-600 text-sm flex items-center gap-1.5">
-                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                    Online & Aktif
+                  <p className={`font-bold text-sm flex items-center gap-1.5 ${waterLevelCm !== null ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${waterLevelCm !== null ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`} />
+                    {waterLevelCm !== null ? 'Online & Aktif' : 'Standby / Menunggu IoT'}
                   </p>
                 </div>
               </div>
@@ -226,7 +262,7 @@ export default function MonitoringPage() {
                   <span className="text-gray-400 block mb-0.5">Baterai</span>
                   <span className="font-bold text-gray-800 flex items-center gap-1">
                     <Battery className="h-4 w-4 text-emerald-600 shrink-0" />
-                    {batteryLevel}%
+                    {batteryLevel !== null ? `${batteryLevel}%` : '-'}
                   </span>
                 </div>
                 <div>
@@ -285,8 +321,8 @@ export default function MonitoringPage() {
           </div>
 
           {/* Area Chart Container */}
-          <div className="h-[280px] sm:h-[340px] w-full">
-            {isMounted && (
+          <div className="h-[280px] sm:h-[340px] w-full flex items-center justify-center">
+            {isMounted && historyData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={getChartData()} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
                   <defs>
@@ -341,7 +377,17 @@ export default function MonitoringPage() {
                   />
                 </AreaChart>
               </ResponsiveContainer>
-            )}
+            ) : isMounted ? (
+              <div className="flex flex-col items-center justify-center text-center p-8 bg-slate-50/60 rounded-xl border border-dashed border-slate-200 w-full h-full">
+                <div className="h-12 w-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center mb-3">
+                  <Droplet className="h-6 w-6" />
+                </div>
+                <h3 className="text-sm font-bold text-gray-800 mb-1">Belum Ada Data Riwayat Sensor di Database</h3>
+                <p className="text-xs text-gray-500 max-w-sm">
+                  Grafik akan otomatis digambar setelah perangkat IoT mengirimkan data bacaan pertama ke database.
+                </p>
+              </div>
+            ) : null}
           </div>
         </motion.div>
 
@@ -422,31 +468,37 @@ export default function MonitoringPage() {
             </div>
 
             <div className="space-y-3">
-              {logs.map((log) => {
-                const getStatusBadge = (s: string) => {
-                  if (s === 'Normal') return { dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
-                  if (s === 'Waspada') return { dot: 'bg-amber-500', badge: 'bg-amber-50 text-amber-800 border-amber-200' };
-                  return { dot: 'bg-rose-500', badge: 'bg-rose-800 text-rose-800 border-rose-200' };
-                };
-                const badgeStyle = getStatusBadge(log.status);
+              {logs.length > 0 ? (
+                logs.map((log) => {
+                  const getStatusBadge = (s: string) => {
+                    if (s === 'Normal') return { dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
+                    if (s === 'Waspada') return { dot: 'bg-amber-500', badge: 'bg-amber-50 text-amber-800 border-amber-200' };
+                    return { dot: 'bg-rose-500', badge: 'bg-rose-800 text-rose-800 border-rose-200' };
+                  };
+                  const badgeStyle = getStatusBadge(log.status);
 
-                return (
-                  <div key={log.id} className="flex items-center justify-between p-3 rounded-xl bg-gray-50/70 border border-gray-100 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${badgeStyle.dot}`} />
-                      <div className="flex flex-col">
-                        <span className="text-gray-400 text-[11px] font-semibold">{log.time}</span>
-                        <span className="font-bold text-gray-800 text-xs sm:text-sm">
-                          Jarak ke Sensor: {log.level}
-                        </span>
+                  return (
+                    <div key={log.id} className="flex items-center justify-between p-3 rounded-xl bg-gray-50/70 border border-gray-100 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${badgeStyle.dot}`} />
+                        <div className="flex flex-col">
+                          <span className="text-gray-400 text-[11px] font-semibold">{log.time}</span>
+                          <span className="font-bold text-gray-800 text-xs sm:text-sm">
+                            Jarak ke Sensor: {log.level}
+                          </span>
+                        </div>
                       </div>
+                      <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${badgeStyle.badge}`}>
+                        {log.status}
+                      </span>
                     </div>
-                    <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${badgeStyle.badge}`}>
-                      {log.status}
-                    </span>
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                <div className="text-center py-8 text-xs text-gray-400 font-medium">
+                  Belum ada catatan log aktivitas dari sensor.
+                </div>
+              )}
             </div>
           </motion.div>
 

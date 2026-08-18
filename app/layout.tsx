@@ -30,8 +30,9 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-screen flex flex-col font-sans">
+      <body className="min-h-screen flex flex-col font-sans" suppressHydrationWarning>
         <SmoothScrollProvider>
           <Navbar />
           <main className="flex-1">
