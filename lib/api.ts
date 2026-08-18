@@ -13,7 +13,7 @@ import {
   PengaduanPayload,
 } from '@/types';
 
-export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://nogosari-be.vercel.app').replace(/\/$/, '');
+export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
 export const SWAGGER_DOCS_URL = `${API_BASE_URL}/api-docs`;
 
 // --- Simple in-memory cache (TTL: 2 minutes) for rarely-changing data ---
