@@ -74,13 +74,19 @@ interface SensorApiItem {
   message?: string;
 }
 
+interface HistoryDataItem {
+  timestamp: number;
+  time: string;
+  level: number;
+}
+
 export default function MonitoringPage() {
   const [activeTab, setActiveTab] = useState<'1Jam' | '1Hari' | '7Hari'>('1Hari');
   const [waterLevelCm, setWaterLevelCm] = useState<number | null>(null);
   const [serverStatusSiaga, setServerStatusSiaga] = useState<string | null>(null);
   const [isDeviceOnline, setIsDeviceOnline] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<string>('Menghubungkan ke Backend...');
-  const [historyData, setHistoryData] = useState<{ time: string; level: number }[]>([]);
+  const [historyData, setHistoryData] = useState<HistoryDataItem[]>([]);
   const [logs, setLogs] = useState<LogItem[]>([]);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -109,7 +115,7 @@ export default function MonitoringPage() {
               const timeStr = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
               setLastUpdated(`Hari ini, ${timeStr} WIB`);
 
-              // Deteksi status aktif real-time (Online jika data masuk dalam 10 menit terakhir)
+              // Deteksi status aktif real-time (Online jika data masuk dalam 15 menit terakhir)
               const diffMinutes = (Date.now() - dateObj.getTime()) / (1000 * 60);
               setIsDeviceOnline(diffMinutes <= 15);
             }
@@ -119,20 +125,22 @@ export default function MonitoringPage() {
           setIsDeviceOnline(false);
         }
 
-        const historyRes = (await getSensorHistory(30)) as unknown as SensorApiItem[] | { data?: SensorApiItem[] };
+        const historyRes = (await getSensorHistory(100)) as unknown as SensorApiItem[] | { data?: SensorApiItem[] };
         const historyList: SensorApiItem[] = Array.isArray(historyRes) 
           ? historyRes 
           : (historyRes?.data && Array.isArray(historyRes.data) ? historyRes.data : []);
 
         if (historyList.length > 0) {
-          const formatted = historyList.map((item: SensorApiItem) => {
+          const formatted: HistoryDataItem[] = historyList.map((item: SensorApiItem) => {
             const rawItemReading = item.nilai_ketinggian ?? item.ketinggian_air ?? item.water_level ?? item.reading ?? item.jarak ?? item.distance ?? 0;
             const rawItemTime = item.timestamp || item.waktu_bacaan || item.created_at || item.time;
-            const timeFormatted = rawItemTime
-              ? new Date(rawItemTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+            const d = rawItemTime ? new Date(rawItemTime) : new Date();
+            const timeFormatted = !isNaN(d.getTime())
+              ? d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
               : '00:00';
 
             return {
+              timestamp: !isNaN(d.getTime()) ? d.getTime() : Date.now(),
               time: timeFormatted,
               level: parseFloat(String(rawItemReading)) / 100,
             };
@@ -193,7 +201,20 @@ export default function MonitoringPage() {
   }, []);
 
   const getChartData = () => {
-    return historyData;
+    if (historyData.length === 0) return [];
+
+    if (activeTab === '1Jam') {
+      // Menampilkan data pembacaan paling terkini (misal 5-8 titik data terakhir)
+      return historyData.slice(-6);
+    }
+
+    if (activeTab === '7Hari') {
+      // Menampilkan seluruh tren historis jangka panjang
+      return historyData;
+    }
+
+    // Default 1Hari: Menampilkan hingga 15 titik data terakhir
+    return historyData.slice(-15);
   };
 
   const getStatusConfig = (cm: number | null, serverStatus?: string | null) => {
@@ -351,22 +372,31 @@ export default function MonitoringPage() {
             <div className="flex items-center gap-1 bg-gray-100/80 p-1 rounded-xl text-xs font-semibold self-start sm:self-auto">
               <button
                 onClick={() => setActiveTab('1Jam')}
-                className={`px-4 py-1.5 rounded-lg transition-all cursor-pointer ${activeTab === '1Jam' ? 'bg-white text-[#1d4ed8] shadow-2xs font-extrabold' : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                className={`px-4 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  activeTab === '1Jam'
+                    ? 'bg-[#1d4ed8] text-white shadow-2xs font-extrabold'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
               >
                 1 Jam
               </button>
               <button
                 onClick={() => setActiveTab('1Hari')}
-                className={`px-4 py-1.5 rounded-lg transition-all cursor-pointer ${activeTab === '1Hari' ? 'bg-[#1d4ed8] text-white shadow-2xs font-extrabold' : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                className={`px-4 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  activeTab === '1Hari'
+                    ? 'bg-[#1d4ed8] text-white shadow-2xs font-extrabold'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
               >
                 1 Hari
               </button>
               <button
                 onClick={() => setActiveTab('7Hari')}
-                className={`px-4 py-1.5 rounded-lg transition-all cursor-pointer ${activeTab === '7Hari' ? 'bg-white text-[#1d4ed8] shadow-2xs font-extrabold' : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                className={`px-4 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  activeTab === '7Hari'
+                    ? 'bg-[#1d4ed8] text-white shadow-2xs font-extrabold'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
               >
                 7 Hari
               </button>
