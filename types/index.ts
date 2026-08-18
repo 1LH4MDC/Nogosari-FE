@@ -16,32 +16,31 @@ export interface AuthResponse {
 
 // 2. Sensor & IoT Types
 export interface SensorReading {
+  id?: number;
   id_bacaan?: number;
-  ketinggian_air?: number;
-  reading?: number;
-  water_level?: number;
-  status_siaga?: 'Aman' | 'Waspada' | 'Siaga' | 'Bahaya' | string;
-  status_water?: string;
-  battery?: number;
-  signal?: string;
-  timestamp?: string;
-  waktu_bacaan?: string;
-  created_at?: string;
+  id_sensor: string;
+  nilai_ketinggian: string | number;
+  satuan?: string;
+  status_siaga: 'Aman' | 'Waspada' | 'Siaga' | 'Bahaya' | string;
+  timestamp: string;
+  nama_lokasi?: string;
 }
 
 export interface SensorDevice {
   id_sensor: string;
-  nama_sensor: string;
-  lokasi: string;
-  threshold_waspada: number;
-  threshold_siaga: number;
-  threshold_bahaya: number;
+  nama_lokasi: string;
+  koordinat_lat?: string;
+  koordinat_long?: string;
+  threshold_waspada: string | number;
+  threshold_siaga: string | number;
+  threshold_bahaya: string | number;
+  status_aktif?: boolean;
 }
 
 export interface ThresholdUpdatePayload {
-  threshold_waspada?: number;
-  threshold_siaga?: number;
-  threshold_bahaya?: number;
+  threshold_waspada: number;
+  threshold_siaga: number;
+  threshold_bahaya: number;
 }
 
 // 3. Kelompok Rentan Banjir Types

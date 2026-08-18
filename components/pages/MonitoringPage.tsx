@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import {
-  Droplet, Clock, Signal, Battery, CheckCircle2, AlertTriangle, XCircle
+  Droplet, Clock, Signal, CheckCircle2, AlertTriangle, XCircle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import {
@@ -51,83 +51,125 @@ const initialLogs: LogItem[] = [
   { id: '5', time: 'Kemarin, 23:50 WIB', level: '1.50m', status: 'Bahaya' },
 ];
 
+interface SensorApiItem {
+  id?: number;
+  id_bacaan?: number;
+  id_sensor?: string;
+  nilai_ketinggian?: string | number;
+  satuan?: string;
+  status_siaga?: string;
+  nama_lokasi?: string;
+  ketinggian_air?: number;
+  reading?: number;
+  water_level?: number;
+  jarak?: number;
+  distance?: number;
+  battery?: number;
+  signal?: string;
+  waktu_bacaan?: string;
+  created_at?: string;
+  timestamp?: string;
+  updated_at?: string;
+  time?: string;
+  message?: string;
+}
+
 export default function MonitoringPage() {
   const [activeTab, setActiveTab] = useState<'1Jam' | '1Hari' | '7Hari'>('1Hari');
   const [waterLevelCm, setWaterLevelCm] = useState<number | null>(null);
-  const [batteryLevel, setBatteryLevel] = useState<number | null>(null);
-  const [signalQuality, setSignalQuality] = useState<string>('-');
+  const [serverStatusSiaga, setServerStatusSiaga] = useState<string | null>(null);
+  const [isDeviceOnline, setIsDeviceOnline] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<string>('Menghubungkan ke Backend...');
   const [historyData, setHistoryData] = useState<{ time: string; level: number }[]>([]);
   const [logs, setLogs] = useState<LogItem[]>([]);
   const [isMounted, setIsMounted] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setIsMounted(true);
+    const timer = setTimeout(() => {
+      setIsMounted(true);
+    }, 0);
 
     async function fetchData() {
       try {
-        const latest: any = await getLatestSensorReading();
+        const latest = (await getLatestSensorReading()) as unknown as SensorApiItem | null;
         if (latest && !latest.message) {
-          // Robust mapping for reading / ketinggian_air / distance
-          const rawReading = latest.ketinggian_air ?? latest.reading ?? latest.water_level ?? latest.jarak ?? latest.distance;
+          // Mapping nilai_ketinggian from backend
+          const rawReading = latest.nilai_ketinggian ?? latest.ketinggian_air ?? latest.reading ?? latest.water_level ?? latest.jarak ?? latest.distance;
           if (rawReading !== undefined && rawReading !== null) {
-            setWaterLevelCm(Number(rawReading));
+            setWaterLevelCm(parseFloat(String(rawReading)));
           }
-          if (latest.battery !== undefined && latest.battery !== null) {
-            setBatteryLevel(Number(latest.battery));
+          if (latest.status_siaga) {
+            setServerStatusSiaga(latest.status_siaga);
           }
-          if (latest.signal) setSignalQuality(latest.signal);
           
-          const rawTime = latest.waktu_bacaan || latest.created_at || latest.timestamp || latest.updated_at;
+          const rawTime = latest.timestamp || latest.waktu_bacaan || latest.created_at || latest.updated_at;
           if (rawTime) {
             const dateObj = new Date(rawTime);
             if (!isNaN(dateObj.getTime())) {
               const timeStr = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
               setLastUpdated(`Hari ini, ${timeStr} WIB`);
+
+              // Deteksi status aktif real-time (Online jika data masuk dalam 10 menit terakhir)
+              const diffMinutes = (Date.now() - dateObj.getTime()) / (1000 * 60);
+              setIsDeviceOnline(diffMinutes <= 15);
             }
           }
         } else if (latest?.message) {
           setLastUpdated('Menunggu kiriman data dari IoT...');
+          setIsDeviceOnline(false);
         }
 
-        const historyRes: any = await getSensorHistory(30);
-        const historyList = Array.isArray(historyRes) 
+        const historyRes = (await getSensorHistory(30)) as unknown as SensorApiItem[] | { data?: SensorApiItem[] };
+        const historyList: SensorApiItem[] = Array.isArray(historyRes) 
           ? historyRes 
           : (historyRes?.data && Array.isArray(historyRes.data) ? historyRes.data : []);
 
         if (historyList.length > 0) {
-          const formatted = historyList.map((item: any) => {
-            const rawItemReading = item.ketinggian_air ?? item.water_level ?? item.reading ?? item.jarak ?? item.distance ?? 0;
-            const rawItemTime = item.waktu_bacaan || item.created_at || item.timestamp || item.time;
+          const formatted = historyList.map((item: SensorApiItem) => {
+            const rawItemReading = item.nilai_ketinggian ?? item.ketinggian_air ?? item.water_level ?? item.reading ?? item.jarak ?? item.distance ?? 0;
+            const rawItemTime = item.timestamp || item.waktu_bacaan || item.created_at || item.time;
             const timeFormatted = rawItemTime
               ? new Date(rawItemTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
               : '00:00';
 
             return {
               time: timeFormatted,
-              level: Number(rawItemReading) / 100,
+              level: parseFloat(String(rawItemReading)) / 100,
             };
           }).reverse();
           setHistoryData(formatted);
 
           // Synchronize recent logs with real readings from sensor history
-          const mappedLogs: LogItem[] = historyList.slice(0, 6).map((item: any, idx: number) => {
-            const rawItemReading = item.ketinggian_air ?? item.water_level ?? item.reading ?? item.jarak ?? item.distance ?? 0;
-            const meters = Number(rawItemReading) / 100;
+          const mappedLogs: LogItem[] = historyList.slice(0, 6).map((item: SensorApiItem, idx: number) => {
+            const rawItemReading = item.nilai_ketinggian ?? item.ketinggian_air ?? item.water_level ?? item.reading ?? item.jarak ?? item.distance ?? 0;
+            const meters = parseFloat(String(rawItemReading)) / 100;
             let status: 'Normal' | 'Waspada' | 'Bahaya' = 'Normal';
-            if (meters < 2.0) status = 'Bahaya';
-            else if (meters <= 3.0) status = 'Waspada';
-            else status = 'Normal';
+            if (item.status_siaga) {
+              const s = item.status_siaga.toLowerCase();
+              if (s.includes('bahaya')) status = 'Bahaya';
+              else if (s.includes('waspada') || s.includes('siaga')) status = 'Waspada';
+              else status = 'Normal';
+            } else {
+              if (meters < 2.0) status = 'Bahaya';
+              else if (meters <= 3.0) status = 'Waspada';
+              else status = 'Normal';
+            }
 
-            const rawItemTime = item.waktu_bacaan || item.created_at || item.timestamp;
-            const timeStr = rawItemTime
-              ? new Date(rawItemTime).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB'
-              : `Bacaan #${idx + 1}`;
+            const rawItemTime = item.timestamp || item.waktu_bacaan || item.created_at;
+            let timeStr = `Bacaan #${idx + 1}`;
+            if (rawItemTime) {
+              const d = new Date(rawItemTime);
+              if (!isNaN(d.getTime())) {
+                const now = new Date();
+                const isToday = d.toDateString() === now.toDateString();
+                const timeOnly = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                timeStr = `${isToday ? 'Hari Ini' : d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })}, ${timeOnly} WIB`;
+              }
+            }
 
             return {
               id: item.id_bacaan ? String(item.id_bacaan) : item.id ? String(item.id) : String(idx),
-              time: `Hari Ini, ${timeStr}`,
+              time: timeStr,
               level: `${meters.toFixed(2)}m`,
               status,
             };
@@ -137,23 +179,24 @@ export default function MonitoringPage() {
             setLogs(mappedLogs);
           }
         }
-        setIsLoading(false);
       } catch (err) {
         console.error('Error fetching live monitoring data:', err);
-        setIsLoading(false);
       }
     }
 
     fetchData();
     const interval = setInterval(fetchData, 10000); // 10s polling
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
   }, []);
 
   const getChartData = () => {
     return historyData;
   };
 
-  const getStatusConfig = (cm: number | null) => {
+  const getStatusConfig = (cm: number | null, serverStatus?: string | null) => {
     if (cm === null) {
       return {
         label: 'MENUNGGU DATA',
@@ -161,6 +204,30 @@ export default function MonitoringPage() {
         textColor: 'text-slate-700',
       };
     }
+
+    if (serverStatus) {
+      const s = serverStatus.toLowerCase();
+      if (s.includes('bahaya')) {
+        return {
+          label: 'BAHAYA',
+          bgColor: 'bg-rose-400',
+          textColor: 'text-rose-950',
+        };
+      } else if (s.includes('waspada') || s.includes('siaga')) {
+        return {
+          label: 'WASPADA',
+          bgColor: 'bg-amber-300',
+          textColor: 'text-amber-950',
+        };
+      } else if (s.includes('aman') || s.includes('normal')) {
+        return {
+          label: 'NORMAL (Aman)',
+          bgColor: 'bg-[#6ee7b7]',
+          textColor: 'text-emerald-950',
+        };
+      }
+    }
+
     const meters = cm / 100;
     // Semakin kecil jarak ke sensor (semakin dekat) = semakin tinggi air = semakin bahaya
     if (meters > 3.0) {
@@ -184,7 +251,7 @@ export default function MonitoringPage() {
     }
   };
 
-  const currentStatus = getStatusConfig(waterLevelCm);
+  const currentStatus = getStatusConfig(waterLevelCm, serverStatusSiaga);
 
   return (
     <div className="bg-[#f8fafc] min-h-screen py-10 sm:py-14">
@@ -243,31 +310,17 @@ export default function MonitoringPage() {
             </div>
 
             {/* Bottom Card: Status Sensor */}
-            <div className="bg-white rounded-2xl p-5 border border-gray-200/70 shadow-xs flex-1 flex flex-col justify-between">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="h-11 w-11 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <div className="bg-white rounded-2xl p-5 border border-gray-200/70 shadow-xs flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className={`h-11 w-11 rounded-full flex items-center justify-center shrink-0 ${isDeviceOnline ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'}`}>
                   <Signal className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 font-semibold mb-0.5">Status Sensor</p>
-                  <p className={`font-bold text-sm flex items-center gap-1.5 ${waterLevelCm !== null ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${waterLevelCm !== null ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`} />
-                    {waterLevelCm !== null ? 'Online & Aktif' : 'Standby / Menunggu IoT'}
+                  <p className="text-xs text-gray-400 font-semibold mb-0.5">Status Sensor IoT</p>
+                  <p className={`font-bold text-sm flex items-center gap-1.5 ${isDeviceOnline ? 'text-emerald-600' : 'text-slate-500'}`}>
+                    <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${isDeviceOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                    {isDeviceOnline ? 'Online & Aktif' : 'Offline / Standby'}
                   </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 pt-3 border-t border-gray-100 text-xs">
-                <div>
-                  <span className="text-gray-400 block mb-0.5">Baterai</span>
-                  <span className="font-bold text-gray-800 flex items-center gap-1">
-                    <Battery className="h-4 w-4 text-emerald-600 shrink-0" />
-                    {batteryLevel !== null ? `${batteryLevel}%` : '-'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-400 block mb-0.5">Sinyal</span>
-                  <span className="font-bold text-gray-800">{signalQuality}</span>
                 </div>
               </div>
             </div>
@@ -400,13 +453,13 @@ export default function MonitoringPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="lg:col-span-6 bg-white rounded-2xl p-6 border border-gray-200/70 shadow-xs flex flex-col justify-between"
+            className="lg:col-span-6 bg-white rounded-2xl p-6 border border-gray-200/70 shadow-xs flex flex-col justify-start"
           >
-            <div>
+            <div className="mb-4">
               <h2 className="text-lg font-extrabold text-gray-900 mb-1">
                 Indikator Ambang Batas (Jarak Bebas Sensor)
               </h2>
-              <p className="text-xs text-gray-400 font-medium mb-5">
+              <p className="text-xs text-gray-400 font-medium">
                 Jarak pantulan gelombang ultrasonik dari sensor atas ke permukaan air.
               </p>
             </div>
@@ -456,13 +509,13 @@ export default function MonitoringPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="lg:col-span-6 bg-white rounded-2xl p-6 border border-gray-200/70 shadow-xs flex flex-col justify-between"
+            className="lg:col-span-6 bg-white rounded-2xl p-6 border border-gray-200/70 shadow-xs flex flex-col justify-start"
           >
-            <div>
+            <div className="mb-4">
               <h2 className="text-lg font-extrabold text-gray-900 mb-1">
                 Log Pembacaan Terakhir Sensor
               </h2>
-              <p className="text-xs text-gray-400 font-medium mb-5">
+              <p className="text-xs text-gray-400 font-medium">
                 Riwayat catatan jarak permukaan air ke alat ultrasonik.
               </p>
             </div>
@@ -473,7 +526,7 @@ export default function MonitoringPage() {
                   const getStatusBadge = (s: string) => {
                     if (s === 'Normal') return { dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
                     if (s === 'Waspada') return { dot: 'bg-amber-500', badge: 'bg-amber-50 text-amber-800 border-amber-200' };
-                    return { dot: 'bg-rose-500', badge: 'bg-rose-800 text-rose-800 border-rose-200' };
+                    return { dot: 'bg-rose-500', badge: 'bg-rose-50 text-rose-800 border-rose-200' };
                   };
                   const badgeStyle = getStatusBadge(log.status);
 
