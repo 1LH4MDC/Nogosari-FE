@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Desa Nogosari Tangguh Bencana",
+  title: "Desa Nogosari Tanggap Bencana",
   description: "Mewujudkan desa cerdas berwawasan lingkungan melalui kolaborasi dan teknologi.",
   icons: {
     icon: "/logo.webp",

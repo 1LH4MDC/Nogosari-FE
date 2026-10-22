@@ -91,7 +91,7 @@ export default function AuthLayout({
                     <Logo size={28} className="h-7 w-7" iconClassName="h-3.5 w-3.5" />
                     <div className="flex flex-col">
                       <span className="text-xs font-bold text-[#1e3a8a] leading-none">
-                        Desa Nogosari Tangguh Bencana
+                        Desa Nogosari Tanggap Bencana
                       </span>
                       <span className="text-[9px] text-gray-400">Kabupaten Jember</span>
                     </div>

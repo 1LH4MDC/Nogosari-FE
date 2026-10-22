@@ -51,7 +51,7 @@ export default function Navbar() {
           <Logo size={44} className="h-11 w-11 shrink-0" />
           <div className="flex flex-col">
             <span className="text-base font-bold leading-tight text-[#1e3a8a]">
-              Desa Nogosari Tangguh Bencana
+              Desa Nogosari Tanggap Bencana
             </span>
             <span className="text-xs text-gray-500 font-medium">Kabupaten Jember</span>
           </div>

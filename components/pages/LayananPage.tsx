@@ -155,7 +155,7 @@ export default function LayananPage() {
             transition={{ duration: 0.6, delay: 0.25, ease: 'easeOut' }}
             className="text-base sm:text-xl text-gray-600 font-normal leading-relaxed max-w-3xl mx-auto"
           >
-            Inisiatif komprehensif Desa Nogosari dalam membangun ketangguhan komunitas terhadap bencana melalui edukasi, inklusivitas, manajemen lingkungan, dan infrastruktur perlindungan terpadu.
+            Inisiatif komprehensif Desa Nogosari dalam membangun kesiapsiagaan komunitas terhadap bencana melalui edukasi, inklusivitas, manajemen lingkungan, dan infrastruktur perlindungan terpadu.
           </motion.p>
         </div>
       </section>

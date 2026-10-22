@@ -24,11 +24,11 @@ export default function Footer() {
             <div className="flex items-center gap-3">
               <Logo size={40} className="h-10 w-10 shrink-0" iconClassName="h-5 w-5" />
               <span className="text-lg font-bold text-[#1e3a8a]">
-                Desa Nogosari Tangguh Bencana
+                Desa Nogosari Tanggap Bencana
               </span>
             </div>
             <p className="text-sm text-gray-600 leading-relaxed max-w-md">
-              Mewujudkan Desa Nogosari tangguh bencana melalui program LIMA-SI.
+              Mewujudkan Desa Nogosari tanggap bencana melalui program LIMA-SI.
             </p>
           </div>
 

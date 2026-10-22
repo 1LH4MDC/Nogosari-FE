@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nogosari Frontend
 
-## Getting Started
+Frontend SI-Tanggap untuk **Desa Nogosari Tanggap Bencana**. Aplikasi ini menyediakan informasi desa, layanan, pemantauan sensor IoT, dan dashboard administrasi.
 
-First, run the development server:
+## Teknologi
+
+- Next.js 16 dengan App Router
+- React 19 dan TypeScript
+- Tailwind CSS 4
+- Recharts untuk grafik monitoring
+- Framer Motion untuk animasi antarmuka
+
+## Persyaratan
+
+- Node.js 20 atau lebih baru
+- npm
+- Backend Nogosari berjalan atau URL backend yang dapat diakses
+
+## Menjalankan aplikasi
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka [http://localhost:3001](http://localhost:3001).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Atur URL backend pada `.env.local`:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3000
+```
 
-## Learn More
+Jika variabel ini tidak diatur, frontend memakai path API relatif pada origin yang sama.
 
-To learn more about Next.js, take a look at the following resources:
+## Halaman utama
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Path          | Keterangan                                                |
+| ------------- | --------------------------------------------------------- |
+| `/`           | Beranda Desa Nogosari Tanggap Bencana                     |
+| `/profil`     | Profil, visi misi, dan tupoksi DESTANA                    |
+| `/layanan`    | Informasi program dan layanan desa                        |
+| `/monitoring` | Bacaan sensor, grafik ketinggian air, status, dan riwayat |
+| `/login`      | Login administrator                                       |
+| `/admin`      | Dashboard administrasi                                    |
+| `/data`       | Data kelompok rentan banjir                               |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Monitoring ketinggian air
 
-## Deploy on Vercel
+Halaman `/monitoring` mengambil bacaan terbaru dan riwayat dari endpoint sensor backend. Nilai `nilai_ketinggian` disimpan dalam sentimeter dan ditampilkan dalam meter. Grafik menampilkan data historis dengan zona ambang berikut:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Status | Ketinggian              |
+| ------ | ----------------------- |
+| Aman   | 0 sampai 4 m            |
+| Siaga  | lebih dari 4 sampai 6 m |
+| Bahaya | lebih dari 6 m          |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Pada batas tepat 4 m, status ditampilkan sebagai Aman. Status Siaga berlaku di atas 4 m hingga 6 m.
+
+## Scripts
+
+| Perintah        | Keterangan                                     |
+| --------------- | ---------------------------------------------- |
+| `npm run dev`   | Menjalankan server pengembangan pada port 3001 |
+| `npm run build` | Membuat build produksi                         |
+| `npm start`     | Menjalankan build produksi pada port 3001      |
+| `npm run lint`  | Menjalankan ESLint                             |

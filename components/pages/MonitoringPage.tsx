@@ -40,15 +40,15 @@ interface LogItem {
   id: string;
   time: string;
   level: string;
-  status: 'Normal' | 'Waspada' | 'Bahaya';
+  status: 'Aman' | 'Siaga' | 'Bahaya';
 }
 
 const initialLogs: LogItem[] = [
-  { id: '1', time: 'Hari Ini, 14:45 WIB', level: '3.45m', status: 'Normal' },
-  { id: '2', time: 'Hari Ini, 14:30 WIB', level: '3.44m', status: 'Normal' },
-  { id: '3', time: 'Hari Ini, 14:00 WIB', level: '3.45m', status: 'Normal' },
-  { id: '4', time: 'Hari Ini, 10:15 WIB', level: '2.40m', status: 'Waspada' },
-  { id: '5', time: 'Kemarin, 23:50 WIB', level: '1.50m', status: 'Bahaya' },
+  { id: '1', time: 'Hari Ini, 14:45 WIB', level: '3.45m', status: 'Aman' },
+  { id: '2', time: 'Hari Ini, 14:30 WIB', level: '3.44m', status: 'Aman' },
+  { id: '3', time: 'Hari Ini, 14:00 WIB', level: '3.45m', status: 'Aman' },
+  { id: '4', time: 'Hari Ini, 10:15 WIB', level: '4.40m', status: 'Siaga' },
+  { id: '5', time: 'Kemarin, 23:50 WIB', level: '6.50m', status: 'Bahaya' },
 ];
 
 interface SensorApiItem {
@@ -83,7 +83,6 @@ interface HistoryDataItem {
 export default function MonitoringPage() {
   const [activeTab, setActiveTab] = useState<'1Jam' | '1Hari' | '7Hari'>('1Hari');
   const [waterLevelCm, setWaterLevelCm] = useState<number | null>(null);
-  const [serverStatusSiaga, setServerStatusSiaga] = useState<string | null>(null);
   const [isDeviceOnline, setIsDeviceOnline] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<string>('Menghubungkan ke Backend...');
   const [historyData, setHistoryData] = useState<HistoryDataItem[]>([]);
@@ -104,10 +103,6 @@ export default function MonitoringPage() {
           if (rawReading !== undefined && rawReading !== null) {
             setWaterLevelCm(parseFloat(String(rawReading)));
           }
-          if (latest.status_siaga) {
-            setServerStatusSiaga(latest.status_siaga);
-          }
-          
           const rawTime = latest.timestamp || latest.waktu_bacaan || latest.created_at || latest.updated_at;
           if (rawTime) {
             const dateObj = new Date(rawTime);
@@ -151,17 +146,7 @@ export default function MonitoringPage() {
           const mappedLogs: LogItem[] = historyList.slice(0, 6).map((item: SensorApiItem, idx: number) => {
             const rawItemReading = item.nilai_ketinggian ?? item.ketinggian_air ?? item.water_level ?? item.reading ?? item.jarak ?? item.distance ?? 0;
             const meters = parseFloat(String(rawItemReading)) / 100;
-            let status: 'Normal' | 'Waspada' | 'Bahaya' = 'Normal';
-            if (item.status_siaga) {
-              const s = item.status_siaga.toLowerCase();
-              if (s.includes('bahaya')) status = 'Bahaya';
-              else if (s.includes('waspada') || s.includes('siaga')) status = 'Waspada';
-              else status = 'Normal';
-            } else {
-              if (meters < 2.0) status = 'Bahaya';
-              else if (meters <= 3.0) status = 'Waspada';
-              else status = 'Normal';
-            }
+            const status: LogItem['status'] = meters > 6 ? 'Bahaya' : meters > 4 ? 'Siaga' : 'Aman';
 
             const rawItemTime = item.timestamp || item.waktu_bacaan || item.created_at;
             let timeStr = `Bacaan #${idx + 1}`;
@@ -203,21 +188,25 @@ export default function MonitoringPage() {
   const getChartData = () => {
     if (historyData.length === 0) return [];
 
-    if (activeTab === '1Jam') {
-      // Menampilkan data pembacaan paling terkini (misal 5-8 titik data terakhir)
-      return historyData.slice(-6);
-    }
+    const selectedData = (() => {
+      if (activeTab === '1Jam') {
+        // Menampilkan data pembacaan paling terkini (misal 5-8 titik data terakhir)
+        return historyData.slice(-6);
+      }
 
-    if (activeTab === '7Hari') {
-      // Menampilkan seluruh tren historis jangka panjang
-      return historyData;
-    }
+      if (activeTab === '7Hari') {
+        // Menampilkan seluruh tren historis jangka panjang
+        return historyData;
+      }
 
-    // Default 1Hari: Menampilkan hingga 15 titik data terakhir
-    return historyData.slice(-15);
+      // Default 1Hari: Menampilkan hingga 15 titik data terakhir
+      return historyData.slice(-15);
+    })();
+
+    return selectedData;
   };
 
-  const getStatusConfig = (cm: number | null, serverStatus?: string | null) => {
+  const getStatusConfig = (cm: number | null) => {
     if (cm === null) {
       return {
         label: 'MENUNGGU DATA',
@@ -226,53 +215,31 @@ export default function MonitoringPage() {
       };
     }
 
-    if (serverStatus) {
-      const s = serverStatus.toLowerCase();
-      if (s.includes('bahaya')) {
-        return {
-          label: 'BAHAYA',
-          bgColor: 'bg-rose-400',
-          textColor: 'text-rose-950',
-        };
-      } else if (s.includes('waspada') || s.includes('siaga')) {
-        return {
-          label: 'WASPADA',
-          bgColor: 'bg-amber-300',
-          textColor: 'text-amber-950',
-        };
-      } else if (s.includes('aman') || s.includes('normal')) {
-        return {
-          label: 'NORMAL (Aman)',
-          bgColor: 'bg-[#6ee7b7]',
-          textColor: 'text-emerald-950',
-        };
-      }
-    }
-
     const meters = cm / 100;
-    // Semakin kecil jarak ke sensor (semakin dekat) = semakin tinggi air = semakin bahaya
-    if (meters > 3.0) {
-      return {
-        label: 'NORMAL (Aman)',
-        bgColor: 'bg-[#6ee7b7]',
-        textColor: 'text-emerald-950',
-      };
-    } else if (meters >= 2.0) {
-      return {
-        label: 'WASPADA',
-        bgColor: 'bg-amber-300',
-        textColor: 'text-amber-950',
-      };
-    } else {
+    if (meters > 6.0) {
       return {
         label: 'BAHAYA',
         bgColor: 'bg-rose-400',
         textColor: 'text-rose-950',
       };
     }
+    if (meters > 4.0) {
+      return {
+        label: 'SIAGA',
+        bgColor: 'bg-amber-300',
+        textColor: 'text-amber-950',
+      };
+    }
+    return {
+      label: 'AMAN',
+      bgColor: 'bg-[#6ee7b7]',
+      textColor: 'text-emerald-950',
+    };
   };
 
-  const currentStatus = getStatusConfig(waterLevelCm, serverStatusSiaga);
+  const currentStatus = getStatusConfig(waterLevelCm);
+  const chartData = getChartData();
+  const chartMax = Math.max(8, Math.ceil(Math.max(0, ...chartData.map((item) => item.level))));
 
   return (
     <div className="bg-[#f8fafc] min-h-screen py-10 sm:py-14">
@@ -289,17 +256,17 @@ export default function MonitoringPage() {
           <div className="lg:col-span-8 bg-white rounded-2xl p-6 sm:p-8 border border-gray-200/70 shadow-xs flex flex-col justify-between">
             <div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-2">
-                Monitoring Jarak Permukaan Air Sungai
+                Monitoring Ketinggian Air Sungai
               </h1>
               <p className="text-sm text-gray-500 font-medium">
-                Sensor IoT Ultrasonik Jarak Bebas (Freeboard) — Sungai Nogosari
+                Pemantauan ketinggian air sungai secara real-time - Sungai Nogosari
               </p>
             </div>
 
             <div className="mt-8 space-y-2">
               <div className={`w-full rounded-2xl ${currentStatus.bgColor} px-6 py-4 flex items-center justify-between shadow-xs transition-all duration-300`}>
                 <span className={`text-xs sm:text-sm font-extrabold uppercase tracking-wider ${currentStatus.textColor}`}>
-                  JARAK KE SENSOR
+                  KETINGGIAN AIR
                 </span>
 
                 <div className={`flex items-center gap-3 font-extrabold ${currentStatus.textColor}`}>
@@ -311,7 +278,7 @@ export default function MonitoringPage() {
                 </div>
               </div>
               <p className="text-[11px] text-gray-400 font-semibold text-right">
-                *Diukur dari sensor di atas jembatan/tiang ke permukaan air sungai (semakin dekat = air naik).
+                *Nilai bacaan ditampilkan sebagai ketinggian air dalam meter.
               </p>
             </div>
           </div>
@@ -359,12 +326,12 @@ export default function MonitoringPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div>
               <h2 className="text-lg font-extrabold text-gray-900">
-                Grafik Tren Jarak Bebas Permukaan Air ({activeTab === '1Jam' ? '1 Jam Terakhir' : activeTab === '7Hari' ? '7 Hari Terakhir' : '24 Jam Terakhir'})
+                Grafik Ketinggian Air ({activeTab === '1Jam' ? '1 Jam Terakhir' : activeTab === '7Hari' ? '7 Hari Terakhir' : '24 Jam Terakhir'})
               </h2>
               <div className="flex flex-wrap items-center gap-3 mt-1.5 text-[11px] font-bold text-gray-600">
-                <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200"><span className="h-2 w-2 rounded-full bg-rose-500" /> Bahaya (&lt;2.0m)</span>
-                <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200"><span className="h-2 w-2 rounded-full bg-amber-500" /> Waspada (2.0-3.0m)</span>
-                <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Normal (&gt;3.0m)</span>
+                <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Aman (0-4 m)</span>
+                <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200"><span className="h-2 w-2 rounded-full bg-amber-500" /> Siaga (4-6 m)</span>
+                <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200"><span className="h-2 w-2 rounded-full bg-rose-500" /> Bahaya (&gt;6 m)</span>
               </div>
             </div>
 
@@ -407,7 +374,7 @@ export default function MonitoringPage() {
           <div className="h-[280px] sm:h-[340px] w-full flex items-center justify-center">
             {isMounted && historyData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={getChartData()} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
+                <AreaChart data={chartData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="waterGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#1d4ed8" stopOpacity={0.45} />
@@ -415,12 +382,10 @@ export default function MonitoringPage() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <ReferenceArea y1={0} y2={4} fill="#d1fae5" fillOpacity={0.35} />
+                  <ReferenceArea y1={4} y2={6} fill="#fef3c7" fillOpacity={0.4} />
+                  <ReferenceArea y1={6} y2={chartMax} fill="#fecdd3" fillOpacity={0.35} />
                   
-                  {/* Colored Zone Background Bands */}
-                  <ReferenceArea y1={0.5} y2={2.0} fill="#fecdd3" fillOpacity={0.25} />
-                  <ReferenceArea y1={2.0} y2={3.0} fill="#fef3c7" fillOpacity={0.25} />
-                  <ReferenceArea y1={3.0} y2={5.0} fill="#d1fae5" fillOpacity={0.25} />
-
                   <XAxis
                     dataKey="time"
                     axisLine={false}
@@ -429,12 +394,11 @@ export default function MonitoringPage() {
                     dy={10}
                   />
                   <YAxis
-                    reversed
                     axisLine={false}
                     tickLine={false}
-                    domain={[0.5, 5.0]}
-                    ticks={[1.0, 2.0, 3.0, 4.0, 5.0]}
-                    tickFormatter={(val) => `${val.toFixed(1)}m`}
+                    domain={[0, chartMax]}
+                    ticks={[0, 2, 4, 6, chartMax]}
+                    tickFormatter={(val) => `${Number(val).toFixed(0)} m`}
                     tick={{ fill: '#64748b', fontSize: 11 }}
                   />
                   <Tooltip
@@ -446,10 +410,10 @@ export default function MonitoringPage() {
                       fontSize: '12px',
                       fontWeight: 600,
                     }}
-                    formatter={(val: any) => [`${val} Meter`, 'Jarak Permukaan ke Sensor']}
+                    formatter={(val: any) => [`${Number(val).toFixed(2)} m`, 'Ketinggian air']}
                   />
-                  <ReferenceLine y={2.0} stroke="#ef4444" strokeDasharray="4 4" strokeWidth={1.5} />
-                  <ReferenceLine y={3.0} stroke="#f59e0b" strokeDasharray="4 4" strokeWidth={1.5} />
+                  <ReferenceLine y={4} stroke="#f59e0b" strokeDasharray="4 4" strokeWidth={1.5} />
+                  <ReferenceLine y={6} stroke="#ef4444" strokeDasharray="4 4" strokeWidth={1.5} />
                   <Area
                     type="monotone"
                     dataKey="level"
@@ -487,48 +451,48 @@ export default function MonitoringPage() {
           >
             <div className="mb-4">
               <h2 className="text-lg font-extrabold text-gray-900 mb-1">
-                Indikator Ambang Batas (Jarak Bebas Sensor)
+                Indikator Ambang Batas Ketinggian Air
               </h2>
               <p className="text-xs text-gray-400 font-medium">
-                Jarak pantulan gelombang ultrasonik dari sensor atas ke permukaan air.
+                Kategori status berdasarkan ketinggian air yang terbaca oleh sensor.
               </p>
             </div>
 
             <div className="space-y-3">
+              {/* Aman */}
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-50/70 border-l-4 border-emerald-500">
+                <div className="flex items-center gap-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <div>
+                    <span className="font-extrabold text-emerald-900 text-xs sm:text-sm block">Aman</span>
+                    <span className="text-[11px] text-emerald-700 font-medium">Ketinggian air berada dalam batas aman</span>
+                  </div>
+                </div>
+                <span className="font-black text-emerald-900 text-xs sm:text-sm">0-4 m</span>
+              </div>
+
+              {/* Siaga */}
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-amber-50/70 border-l-4 border-amber-500">
+                <div className="flex items-center gap-2.5">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+                  <div>
+                    <span className="font-extrabold text-amber-900 text-xs sm:text-sm block">Siaga</span>
+                    <span className="text-[11px] text-amber-700 font-medium">Ketinggian air meningkat dan perlu diwaspadai</span>
+                  </div>
+                </div>
+                <span className="font-black text-amber-900 text-xs sm:text-sm">4-6 m</span>
+              </div>
+
               {/* Bahaya */}
               <div className="flex items-center justify-between p-3.5 rounded-xl bg-rose-50/70 border-l-4 border-rose-500">
                 <div className="flex items-center gap-2.5">
                   <XCircle className="h-4 w-4 text-rose-700 shrink-0" />
                   <div>
                     <span className="font-extrabold text-rose-900 text-xs sm:text-sm block">Bahaya</span>
-                    <span className="text-[11px] text-rose-600 font-medium">Air sangat dekat dengan sensor (siaga meluap)</span>
+                    <span className="text-[11px] text-rose-600 font-medium">Ketinggian air melewati batas bahaya</span>
                   </div>
                 </div>
-                <span className="font-black text-rose-900 text-xs sm:text-sm">&lt; 2.0 m</span>
-              </div>
-
-              {/* Waspada */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-amber-50/70 border-l-4 border-amber-500">
-                <div className="flex items-center gap-2.5">
-                  <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
-                  <div>
-                    <span className="font-extrabold text-amber-900 text-xs sm:text-sm block">Waspada</span>
-                    <span className="text-[11px] text-amber-700 font-medium">Permukaan air mulai naik mendekati batas</span>
-                  </div>
-                </div>
-                <span className="font-black text-amber-900 text-xs sm:text-sm">2.0 - 3.0 m</span>
-              </div>
-
-              {/* Normal */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-50/70 border-l-4 border-emerald-500">
-                <div className="flex items-center gap-2.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                  <div>
-                    <span className="font-extrabold text-emerald-900 text-xs sm:text-sm block">Normal / Aman</span>
-                    <span className="text-[11px] text-emerald-700 font-medium">Permukaan air stabil jauh di bawah sensor</span>
-                  </div>
-                </div>
-                <span className="font-black text-emerald-900 text-xs sm:text-sm">&gt; 3.0 m</span>
+                <span className="font-black text-rose-900 text-xs sm:text-sm">&gt;6 m</span>
               </div>
             </div>
           </motion.div>
@@ -546,7 +510,7 @@ export default function MonitoringPage() {
                 Log Pembacaan Terakhir Sensor
               </h2>
               <p className="text-xs text-gray-400 font-medium">
-                Riwayat catatan jarak permukaan air ke alat ultrasonik.
+                Riwayat bacaan ketinggian air dari sensor.
               </p>
             </div>
 
@@ -554,8 +518,8 @@ export default function MonitoringPage() {
               {logs.length > 0 ? (
                 logs.map((log) => {
                   const getStatusBadge = (s: string) => {
-                    if (s === 'Normal') return { dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
-                    if (s === 'Waspada') return { dot: 'bg-amber-500', badge: 'bg-amber-50 text-amber-800 border-amber-200' };
+                    if (s === 'Aman') return { dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
+                    if (s === 'Siaga') return { dot: 'bg-amber-500', badge: 'bg-amber-50 text-amber-800 border-amber-200' };
                     return { dot: 'bg-rose-500', badge: 'bg-rose-50 text-rose-800 border-rose-200' };
                   };
                   const badgeStyle = getStatusBadge(log.status);
@@ -567,7 +531,7 @@ export default function MonitoringPage() {
                         <div className="flex flex-col">
                           <span className="text-gray-400 text-[11px] font-semibold">{log.time}</span>
                           <span className="font-bold text-gray-800 text-xs sm:text-sm">
-                            Jarak ke Sensor: {log.level}
+                            Ketinggian Air: {log.level}
                           </span>
                         </div>
                       </div>

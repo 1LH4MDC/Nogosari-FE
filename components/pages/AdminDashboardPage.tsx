@@ -345,8 +345,8 @@ export default function AdminDashboardPage() {
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <Logo size={32} className="h-8 w-8 sm:h-9 sm:w-9 shrink-0" />
             <div className="flex flex-col min-w-0">
-              <span className="font-extrabold text-gray-900 text-sm sm:text-base leading-tight truncate">Admin Dashboard</span>
-              <span className="text-[10px] sm:text-xs text-blue-600 font-semibold truncate">Desa Nogosari Tangguh Bencana</span>
+              <span className="font-extrabold text-gray-900 text-sm sm:text-base leading-tight truncate">Desa Nogosari Tanggap Bencana</span>
+              <span className="text-[10px] sm:text-xs text-blue-600 font-semibold truncate">Dashboard Admin</span>
             </div>
           </div>
 
@@ -441,15 +441,13 @@ export default function AdminDashboardPage() {
                 <div className="min-w-0">
                   <p className="text-xs font-semibold text-gray-500 truncate">Jarak Sensor Ketinggian</p>
                   <h4 className="text-lg sm:text-xl font-extrabold text-gray-900 mt-0.5">
-                    {sensorReading?.reading !== undefined
-                      ? `${(sensorReading.reading / 100).toFixed(2)} m`
-                      : sensorReading?.ketinggian_air !== undefined
-                      ? `${(sensorReading.ketinggian_air / 100).toFixed(2)} m`
+                    {sensorReading?.nilai_ketinggian !== undefined
+                      ? `${(Number(sensorReading.nilai_ketinggian) / 100).toFixed(2)} m`
                       : '3.45 m'}
                   </h4>
                   <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1 mt-1 truncate">
                     <CheckCircle2 className="h-3 w-3 shrink-0" />
-                    {sensorReading?.status_water || sensorReading?.status_siaga || 'Aman (Normal)'}
+                    {sensorReading?.status_siaga || 'Aman (Normal)'}
                   </span>
                 </div>
               </div>

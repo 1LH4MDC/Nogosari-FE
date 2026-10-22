@@ -79,8 +79,8 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, []);
 
-  const waterLevel = sensorData?.reading !== undefined ? `${sensorData.reading} cm` : '345 cm';
-  const waterStatus = sensorData?.status_water ? sensorData.status_water.toUpperCase() : 'NORMAL';
+  const waterLevel = sensorData?.nilai_ketinggian !== undefined ? `${sensorData.nilai_ketinggian} cm` : '345 cm';
+  const waterStatus = sensorData?.status_siaga ? sensorData.status_siaga.toUpperCase() : 'NORMAL';
 
   // Dynamic status banner styling based on IoT status
   const getBannerStyle = () => {
@@ -118,11 +118,11 @@ export default function HomePage() {
         >
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight drop-shadow-lg leading-tight mb-6">
             Selamat Datang di <br />
-            <span className="text-[#93c5fd]">Desa Nogosari Tangguh Bencana</span>
+            <span className="text-[#93c5fd]">Desa Nogosari Tanggap Bencana</span>
           </h1>
 
           <p className="text-base sm:text-xl text-gray-100 max-w-3xl mx-auto leading-relaxed font-normal opacity-95">
-            Mewujudkan Desa Nogosari sebagai Desa Konservasi dan Tangguh Bencana melalui Integrasi Program LIMA-SI berbasis IoT dan berkelanjutan
+            Mewujudkan Desa Nogosari sebagai Desa Konservasi dan Tanggap Bencana melalui Integrasi Program LIMA-SI berbasis IoT dan berkelanjutan
           </p>
         </motion.div>
       </section>
@@ -184,7 +184,7 @@ export default function HomePage() {
             </div>
           </motion.div>
 
-          {/* 2. Section "Desa Nogosari Tangguh Bencana" Header */}
+          {/* 2. Section "Desa Nogosari Tanggap Bencana" Header */}
           <motion.div
             initial={{ opacity: 0, y: 25 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -193,7 +193,7 @@ export default function HomePage() {
             className="text-center mb-8"
           >
             <h2 className="text-2xl sm:text-4xl font-extrabold text-[#1e3a8a] tracking-tight">
-              Desa Nogosari Tangguh Bencana
+              Desa Nogosari Tanggap Bencana
             </h2>
           </motion.div>
 
@@ -212,7 +212,7 @@ export default function HomePage() {
 
               <div className="flex items-center gap-2 font-extrabold">
                 <Droplet className="h-6 w-6 fill-current shrink-0" />
-                <span className="text-xl sm:text-2xl">{sensorData?.reading !== undefined ? `${(sensorData.reading / 100).toFixed(2)} m` : '3.45 m'}</span>
+                <span className="text-xl sm:text-2xl">{sensorData?.nilai_ketinggian !== undefined ? `${(Number(sensorData.nilai_ketinggian) / 100).toFixed(2)} m` : '3.45 m'}</span>
               </div>
 
               <span className="text-base sm:text-lg font-extrabold tracking-wider">

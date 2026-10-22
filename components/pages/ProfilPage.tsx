@@ -1,6 +1,6 @@
 'use client';
 
-import { History, Target, ShieldCheck, MapPin, Compass, Users, Layers, AlertCircle } from 'lucide-react';
+import { History, Target, ShieldCheck, MapPin, Compass } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function ProfilPage() {
@@ -17,10 +17,10 @@ export default function ProfilPage() {
           >
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-[#1d4ed8] leading-tight sm:leading-tight mb-6">
               Mengenal Lebih Dekat <br />
-              Desa Nogosari Tangguh Bencana
+              Desa Nogosari Tanggap Bencana
             </h1>
             <p className="text-base sm:text-xl text-gray-600 font-normal leading-relaxed max-w-3xl mx-auto">
-              Desa Nogosari Tangguh Bencana lahir berdasarkan kode dari suara alam yang tidak bisa terprediksi oleh indra alami yang dimiliki oleh manusia
+              Desa Nogosari Tanggap Bencana lahir berdasarkan kode dari suara alam yang tidak bisa terprediksi oleh indra alami yang dimiliki oleh manusia
             </p>
           </motion.div>
         </div>
@@ -44,14 +44,14 @@ export default function ProfilPage() {
                   <div className="p-3 rounded-xl bg-blue-50 text-[#1d4ed8]">
                     <History className="h-6 w-6" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900">Sejarah Desa Tangguh Bencana</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">Sejarah Desa Tanggap Bencana</h2>
                 </div>
                 <div className="space-y-4 text-gray-600 leading-relaxed text-sm sm:text-base">
                   <p>
                     Desa Nogosari memiliki rekam jejak panjang sebagai komunitas agraris yang sangat bergantung pada kelestarian tata air dan keseimbangan lingkungan. Sejak puluhan tahun lalu, masyarakat dan leluhur desa telah menjalin keharmonisan dengan alam sekitar.
                   </p>
                   <p>
-                    Seiring meningkatnya potensi risiko bencana dan dinamika iklim global, program Desa Tangguh Bencana (Destana) Nogosari dibentuk. Melalui integrasi Program LIMA-SI berbasis IoT (Internet of Things) dan pemberdayaan berbasis komunitas, Destana Nogosari hadir untuk mentransformasikan kewaspadaan tradisional menjadi kesiapsiagaan bencana yang modern, responsif, dan berkelanjutan.
+                    Seiring meningkatnya potensi risiko bencana dan dinamika iklim global, program Desa Tanggap Bencana (Destana) Nogosari dibentuk. Melalui integrasi Program LIMA-SI berbasis IoT (Internet of Things) dan pemberdayaan berbasis komunitas, Destana Nogosari hadir untuk mentransformasikan kewaspadaan tradisional menjadi kesiapsiagaan bencana yang modern, responsif, dan berkelanjutan.
                   </p>
                 </div>
               </div>
@@ -72,7 +72,7 @@ export default function ProfilPage() {
                   <h2 className="text-xl font-bold">Visi Destana</h2>
                 </div>
                 <p className="text-blue-100 text-sm sm:text-base leading-relaxed italic">
-                  &quot;Terwujudnya Desa Nogosari yang Mandiri, Tangguh, dan Berkelanjutan melalui Harmoni Konservasi Alam, Teknologi IoT, dan Pemberdayaan Komunitas.&quot;
+                  &quot;Terwujudnya Desa Nogosari yang Mandiri, Tanggap, dan Berkelanjutan melalui Harmoni Konservasi Alam, Teknologi IoT, dan Pemberdayaan Komunitas.&quot;
                 </p>
               </div>
 
@@ -118,44 +118,77 @@ export default function ProfilPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {[
                 {
-                  icon: AlertCircle,
-                  title: 'Peringatan Dini IoT',
-                  desc: 'Memantau indikator ketinggian air secara real-time untuk menyebarkan sinyal peringatan dini.',
+                  title: 'Pembina',
+                  desc: 'Memberikan pembinaan, arahan, dan dukungan terhadap pelaksanaan program DESTANA serta memastikan program selaras dengan kebijakan pemerintah desa.',
                 },
                 {
-                  icon: Users,
-                  title: 'Edukasi & Mitigasi',
-                  desc: 'Menyelenggarakan pelatihan dan simulasi evakuasi berkala bagi seluruh warga desa.',
+                  title: 'Pengarah',
+                  desc: 'Memberikan arahan strategis, mengoordinasikan dukungan lintas sektor, serta memberikan masukan dalam pelaksanaan dan evaluasi program kebencanaan.',
                 },
                 {
-                  icon: ShieldCheck,
-                  title: 'Respon Cepat Evakuasi',
-                  desc: 'Mengoordinasikan alur evakuasi mandiri dan bantuan logistik darurat bencana.',
+                  title: 'Ketua',
+                  desc: 'Memimpin dan mengoordinasikan seluruh kegiatan DESTANA, mengarahkan pelaksanaan program, serta memantau pencapaian tujuan desa tanggap bencana.',
                 },
                 {
-                  icon: Layers,
-                  title: 'Konservasi Lingkungan',
-                  desc: 'Menjaga ekosistem perairan dan penghijauan desa demi keberlanjutan masa depan.',
+                  title: 'Sekretaris',
+                  desc: 'Mengelola administrasi dan dokumentasi kegiatan, menyusun jadwal dan notulen rapat, serta menyiapkan laporan pelaksanaan program.',
+                },
+                {
+                  title: 'Bendahara',
+                  desc: 'Mengelola administrasi keuangan, mencatat pemasukan dan pengeluaran, menyusun laporan keuangan, serta memastikan penggunaan dana sesuai peruntukannya.',
+                },
+                {
+                  title: 'Bidang Peringatan Dini Si-Tanggap',
+                  desc: 'Mengelola sistem peringatan dini bencana, memantau informasi potensi bahaya, menyebarkan peringatan kepada masyarakat, serta mendukung penyampaian informasi darurat secara cepat.',
+                },
+                {
+                  title: 'Bidang Edukasi dan Kesiapsiagaan Si-Kencana',
+                  desc: 'Melaksanakan edukasi kebencanaan, menyusun panduan kesiapsiagaan, menyelenggarakan sosialisasi dan simulasi evakuasi, serta meningkatkan pengetahuan masyarakat dalam menghadapi bencana.',
+                },
+                {
+                  title: 'Bidang Perlindungan Kelompok Rentan Si-Care',
+                  desc: 'Mengidentifikasi dan mendata kelompok rentan, meliputi lansia, ibu hamil, anak-anak, dan penyandang disabilitas, serta mengoordinasikan bantuan dan prioritas evakuasi sesuai kebutuhan.',
+                },
+                {
+                  title: 'Bidang Konservasi dan Pengelolaan Lingkungan Si-Rasa',
+                  desc: 'Mengelola kegiatan konservasi lingkungan, pengurangan dan pemilahan sampah, pemanfaatan sampah organik maupun anorganik, serta mendorong partisipasi masyarakat dalam menjaga lingkungan.',
+                },
+                {
+                  title: 'Bidang Logistik dan Ketahanan Pangan',
+                  desc: 'Mendata dan menyiapkan kebutuhan logistik kebencanaan, mengelola persediaan bahan pangan dan perlengkapan darurat, serta mendukung pemenuhan kebutuhan dasar masyarakat terdampak bencana.',
+                },
+                {
+                  title: 'Bidang Evakuasi dan Penyelamatan',
+                  desc: 'Menyusun rencana evakuasi, mengidentifikasi jalur dan titik kumpul yang aman, membantu proses evakuasi warga, serta berkoordinasi dengan petugas terkait dalam kegiatan penyelamatan.',
+                },
+                {
+                  title: 'Bidang Informasi dan Komunikasi',
+                  desc: 'Mengelola penyebaran informasi kebencanaan, menyampaikan peringatan dan informasi darurat melalui saluran komunikasi yang tersedia, serta mendukung koordinasi informasi antara pengurus, pemerintah desa, dan masyarakat.',
+                },
+                {
+                  title: 'Bidang Rehabilitasi dan Rekonstruksi',
+                  desc: 'Mendata kerusakan dan kebutuhan pascabencana, membantu perencanaan pemulihan fasilitas dan lingkungan, serta mendukung pemulihan kondisi sosial dan ekonomi masyarakat terdampak.',
                 },
               ].map((item, idx) => {
-                const IconComponent = item.icon;
                 return (
                   <motion.div
                     key={item.title}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 16 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: idx * 0.1 }}
-                    className="bg-white rounded-2xl p-6 border border-gray-200/70 shadow-xs hover:shadow-md transition-shadow"
+                    transition={{ duration: 0.35, delay: idx * 0.03 }}
+                    className="flex items-start gap-4 bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/70 shadow-xs hover:shadow-md transition-shadow"
                   >
-                    <div className="p-3 rounded-xl bg-blue-50 text-[#1d4ed8] w-fit mb-4">
-                      <IconComponent className="h-6 w-6" />
+                    <div className="h-10 w-10 shrink-0 rounded-xl bg-blue-50 text-[#1d4ed8] flex items-center justify-center font-extrabold text-sm">
+                      {String(idx + 1).padStart(2, '0')}
                     </div>
-                    <h3 className="font-bold text-gray-900 text-base mb-2">{item.title}</h3>
-                    <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">{item.desc}</p>
+                    <div>
+                      <h3 className="font-bold text-gray-900 text-base mb-1.5">{item.title}</h3>
+                      <p className="text-sm text-gray-600 leading-relaxed">{item.desc}</p>
+                    </div>
                   </motion.div>
                 );
               })}
@@ -170,7 +203,7 @@ export default function ProfilPage() {
             transition={{ duration: 0.6 }}
           >
             <div className="mb-8">
-              <h2 className="text-3xl font-extrabold text-[#1e3a8a] tracking-tight mb-2">Peta Desa Tangguh Bencana</h2>
+              <h2 className="text-3xl font-extrabold text-[#1e3a8a] tracking-tight mb-2">Peta Desa Tanggap Bencana</h2>
               <p className="text-gray-600 text-sm sm:text-base">Potret geografis dan lokasi integrasi program LIMA-SI di Desa Nogosari.</p>
             </div>
 
