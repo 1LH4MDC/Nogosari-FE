@@ -43,15 +43,18 @@ function createDemoSensorHistory(limit = 100): SensorReading[] {
     const age = index < 6
       ? index * 10 * 60 * 1000
       : oneHour + (index - 5) * ((sevenDays - oneHour) / Math.max(1, limit - 6));
-    const reading = 330 + 24 * Math.sin(index * 0.42) + 9 * Math.cos(index * 0.19);
+    const timestamp = now - age;
+    const dayCycle = 45 * Math.sin((timestamp / (24 * oneHour)) * Math.PI * 2);
+    const shorterCycle = 18 * Math.sin((timestamp / (6 * oneHour)) * Math.PI * 2);
+    const reading = 350 + dayCycle + shorterCycle;
 
     return {
       id: -(index + 1),
       id_sensor: 'SN-001',
       nilai_ketinggian: Number(reading.toFixed(1)),
       satuan: 'cm',
-      status_siaga: 'Aman',
-      timestamp: new Date(now - age).toISOString(),
+      status_siaga: reading > 600 ? 'Bahaya' : reading > 400 ? 'Siaga' : 'Aman',
+      timestamp: new Date(timestamp).toISOString(),
       nama_lokasi: 'Sungai Nogosari Utama',
       is_demo: true,
     };

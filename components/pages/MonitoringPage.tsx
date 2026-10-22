@@ -130,10 +130,6 @@ export default function MonitoringPage() {
         if (historyList.length > 0) {
           const usingDemoData = Boolean(latest?.is_demo || historyList[0]?.is_demo);
           setIsDemoData(usingDemoData);
-          if (usingDemoData) {
-            setLastUpdated('Data simulasi - backend belum tersedia');
-            setIsDeviceOnline(false);
-          }
 
           const formatted: HistoryDataItem[] = historyList.map((item: SensorApiItem) => {
             const rawItemReading = item.nilai_ketinggian ?? item.ketinggian_air ?? item.water_level ?? item.reading ?? item.jarak ?? item.distance ?? 0;
@@ -320,6 +316,7 @@ export default function MonitoringPage() {
                     <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${isDeviceOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
                     {isDeviceOnline ? 'Online & Aktif' : 'Offline / Standby'}
                   </p>
+                  {isDemoData && <span className="mt-1 block text-[10px] font-semibold text-sky-700">Mode simulasi</span>}
                 </div>
               </div>
             </div>
