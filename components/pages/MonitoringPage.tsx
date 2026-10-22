@@ -52,6 +52,7 @@ const initialLogs: LogItem[] = [
 ];
 
 interface SensorApiItem {
+  is_demo?: boolean;
   id?: number;
   id_bacaan?: number;
   id_sensor?: string;
@@ -87,6 +88,7 @@ export default function MonitoringPage() {
   const [lastUpdated, setLastUpdated] = useState<string>('Menghubungkan ke Backend...');
   const [historyData, setHistoryData] = useState<HistoryDataItem[]>([]);
   const [logs, setLogs] = useState<LogItem[]>([]);
+  const [isDemoData, setIsDemoData] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -126,6 +128,13 @@ export default function MonitoringPage() {
           : (historyRes?.data && Array.isArray(historyRes.data) ? historyRes.data : []);
 
         if (historyList.length > 0) {
+          const usingDemoData = Boolean(latest?.is_demo || historyList[0]?.is_demo);
+          setIsDemoData(usingDemoData);
+          if (usingDemoData) {
+            setLastUpdated('Data simulasi - backend belum tersedia');
+            setIsDeviceOnline(false);
+          }
+
           const formatted: HistoryDataItem[] = historyList.map((item: SensorApiItem) => {
             const rawItemReading = item.nilai_ketinggian ?? item.ketinggian_air ?? item.water_level ?? item.reading ?? item.jarak ?? item.distance ?? 0;
             const rawItemTime = item.timestamp || item.waktu_bacaan || item.created_at || item.time;
@@ -171,6 +180,8 @@ export default function MonitoringPage() {
           if (mappedLogs.length > 0) {
             setLogs(mappedLogs);
           }
+        } else {
+          setIsDemoData(false);
         }
       } catch (err) {
         console.error('Error fetching live monitoring data:', err);
@@ -329,6 +340,7 @@ export default function MonitoringPage() {
                 Grafik Ketinggian Air ({activeTab === '1Jam' ? '1 Jam Terakhir' : activeTab === '7Hari' ? '7 Hari Terakhir' : '24 Jam Terakhir'})
               </h2>
               <div className="flex flex-wrap items-center gap-3 mt-1.5 text-[11px] font-bold text-gray-600">
+                {isDemoData && <span className="px-2 py-0.5 rounded-md bg-sky-50 text-sky-800 border border-sky-200">DATA SIMULASI</span>}
                 <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Aman (0-4 m)</span>
                 <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200"><span className="h-2 w-2 rounded-full bg-amber-500" /> Siaga (4-6 m)</span>
                 <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200"><span className="h-2 w-2 rounded-full bg-rose-500" /> Bahaya (&gt;6 m)</span>
