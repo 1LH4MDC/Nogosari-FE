@@ -218,7 +218,6 @@ export default function HomePage() {
               <span className="text-base sm:text-lg font-extrabold tracking-wider">
                 {waterStatus}
               </span>
-              {sensorData?.is_demo && <span className="rounded-md bg-black/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wide">Simulasi</span>}
             </motion.div>
 
             <motion.div

@@ -447,7 +447,7 @@ export default function AdminDashboardPage() {
                   </h4>
                   <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1 mt-1 truncate">
                     <CheckCircle2 className="h-3 w-3 shrink-0" />
-                    {sensorReading?.status_siaga || 'Aman (Normal)'}{sensorReading?.is_demo ? ' - Data Simulasi' : ''}
+                    {sensorReading?.status_siaga || 'Aman (Normal)'}
                   </span>
                 </div>
               </div>
