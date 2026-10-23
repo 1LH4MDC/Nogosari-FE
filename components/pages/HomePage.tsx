@@ -79,16 +79,16 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, []);
 
-  const waterLevel = sensorData?.nilai_ketinggian !== undefined ? `${sensorData.nilai_ketinggian} cm` : '345 cm';
-  const waterStatus = sensorData?.status_siaga ? sensorData.status_siaga.toUpperCase() : 'NORMAL';
+  const waterLevelCm = sensorData?.nilai_ketinggian !== undefined ? Number(sensorData.nilai_ketinggian) : 345;
+  const waterLevelMeters = waterLevelCm / 100;
+  const waterStatus = waterLevelMeters > 6 ? 'BAHAYA' : waterLevelMeters > 4 ? 'SIAGA' : 'AMAN';
 
   // Dynamic status banner styling based on IoT status
   const getBannerStyle = () => {
     switch (waterStatus) {
-      case 'WASPADA':
+      case 'SIAGA':
         return 'bg-amber-300 text-amber-950';
       case 'BAHAYA':
-      case 'SIAGA':
         return 'bg-rose-400 text-rose-950';
       default:
         return 'bg-[#6ee7b7] text-emerald-950';
@@ -207,12 +207,12 @@ export default function HomePage() {
               className={`flex-1 rounded-2xl px-6 py-4 flex items-center justify-between shadow-xs gap-4 ${getBannerStyle()}`}
             >
               <span className="text-xs sm:text-sm font-extrabold uppercase tracking-wider">
-                JARAK KE SENSOR
+                KETINGGIAN AIR
               </span>
 
               <div className="flex items-center gap-2 font-extrabold">
                 <Droplet className="h-6 w-6 fill-current shrink-0" />
-                <span className="text-xl sm:text-2xl">{sensorData?.nilai_ketinggian !== undefined ? `${(Number(sensorData.nilai_ketinggian) / 100).toFixed(2)} m` : '3.45 m'}</span>
+                <span className="text-xl sm:text-2xl">{waterLevelMeters.toFixed(2)} m</span>
               </div>
 
               <span className="text-base sm:text-lg font-extrabold tracking-wider">
@@ -248,35 +248,35 @@ export default function HomePage() {
               className="bg-white rounded-2xl p-6 border border-gray-200/70 shadow-xs flex flex-col justify-between"
             >
               <h3 className="font-extrabold text-gray-900 text-base mb-5">
-                Indikator Ambang Batas (Jarak Bebas)
+                Indikator Ambang Batas Ketinggian Air
               </h3>
 
               <div className="space-y-3">
+                {/* Aman */}
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-50/70 border-l-4 border-emerald-500">
+                  <div className="flex items-center gap-2.5">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <span className="font-bold text-emerald-900 text-xs sm:text-sm">Aman</span>
+                  </div>
+                  <span className="font-extrabold text-emerald-900 text-xs sm:text-sm">0-4 m</span>
+                </div>
+
+                {/* Siaga */}
+                <div className="flex items-center justify-between p-3.5 rounded-xl bg-amber-50/70 border-l-4 border-amber-500">
+                  <div className="flex items-center gap-2.5">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+                    <span className="font-bold text-amber-900 text-xs sm:text-sm">Siaga</span>
+                  </div>
+                  <span className="font-extrabold text-amber-900 text-xs sm:text-sm">4-6 m</span>
+                </div>
+
                 {/* Bahaya */}
                 <div className="flex items-center justify-between p-3.5 rounded-xl bg-rose-50/70 border-l-4 border-rose-500">
                   <div className="flex items-center gap-2.5">
                     <XCircle className="h-4 w-4 text-rose-700 shrink-0" />
                     <span className="font-bold text-rose-900 text-xs sm:text-sm">Bahaya</span>
                   </div>
-                  <span className="font-extrabold text-rose-900 text-xs sm:text-sm">&lt; 2.0 m</span>
-                </div>
-
-                {/* Waspada */}
-                <div className="flex items-center justify-between p-3.5 rounded-xl bg-amber-50/70 border-l-4 border-amber-500">
-                  <div className="flex items-center gap-2.5">
-                    <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
-                    <span className="font-bold text-amber-900 text-xs sm:text-sm">Waspada</span>
-                  </div>
-                  <span className="font-extrabold text-amber-900 text-xs sm:text-sm">2.0 - 3.0 m</span>
-                </div>
-
-                {/* Normal */}
-                <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-50/70 border-l-4 border-emerald-500">
-                  <div className="flex items-center gap-2.5">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                    <span className="font-bold text-emerald-900 text-xs sm:text-sm">Normal / Aman</span>
-                  </div>
-                  <span className="font-extrabold text-emerald-900 text-xs sm:text-sm">&gt; 3.0 m</span>
+                  <span className="font-extrabold text-rose-900 text-xs sm:text-sm">&gt;6 m</span>
                 </div>
               </div>
             </motion.div>
