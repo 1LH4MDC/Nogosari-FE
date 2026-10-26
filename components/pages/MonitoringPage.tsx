@@ -43,16 +43,8 @@ interface LogItem {
   status: 'Aman' | 'Siaga' | 'Bahaya';
 }
 
-const initialLogs: LogItem[] = [
-  { id: '1', time: 'Hari Ini, 14:45 WIB', level: '3.45m', status: 'Aman' },
-  { id: '2', time: 'Hari Ini, 14:30 WIB', level: '3.44m', status: 'Aman' },
-  { id: '3', time: 'Hari Ini, 14:00 WIB', level: '3.45m', status: 'Aman' },
-  { id: '4', time: 'Hari Ini, 10:15 WIB', level: '4.40m', status: 'Siaga' },
-  { id: '5', time: 'Kemarin, 23:50 WIB', level: '6.50m', status: 'Bahaya' },
-];
 
 interface SensorApiItem {
-  is_demo?: boolean;
   id?: number;
   id_bacaan?: number;
   id_sensor?: string;

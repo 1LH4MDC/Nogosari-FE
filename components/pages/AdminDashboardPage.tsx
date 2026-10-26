@@ -439,15 +439,15 @@ export default function AdminDashboardPage() {
                   <Droplet className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-gray-500 truncate">Jarak Sensor Ketinggian</p>
+                  <p className="text-xs font-semibold text-gray-500 truncate">Ketinggian Air</p>
                   <h4 className="text-lg sm:text-xl font-extrabold text-gray-900 mt-0.5">
                     {sensorReading?.nilai_ketinggian !== undefined
                       ? `${(Number(sensorReading.nilai_ketinggian) / 100).toFixed(2)} m`
-                      : '3.45 m'}
+                      : '-'}
                   </h4>
                   <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-1 mt-1 truncate">
                     <CheckCircle2 className="h-3 w-3 shrink-0" />
-                    {sensorReading?.status_siaga || 'Aman (Normal)'}
+                    {sensorReading?.status_siaga || 'Menunggu data'}
                   </span>
                 </div>
               </div>

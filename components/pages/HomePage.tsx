@@ -79,9 +79,12 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, []);
 
-  const waterLevelCm = sensorData?.nilai_ketinggian !== undefined ? Number(sensorData.nilai_ketinggian) : 345;
-  const waterLevelMeters = waterLevelCm / 100;
-  const waterStatus = waterLevelMeters > 6 ? 'BAHAYA' : waterLevelMeters > 4 ? 'SIAGA' : 'AMAN';
+  const hasData = sensorData?.nilai_ketinggian !== undefined && sensorData?.nilai_ketinggian !== null;
+  const waterLevelCm = hasData ? Number(sensorData.nilai_ketinggian) : null;
+  const waterLevelMeters = waterLevelCm !== null ? waterLevelCm / 100 : null;
+  const waterStatus = waterLevelMeters !== null
+    ? (waterLevelMeters > 6 ? 'BAHAYA' : waterLevelMeters > 4 ? 'SIAGA' : 'AMAN')
+    : 'STANDBY';
 
   // Dynamic status banner styling based on IoT status
   const getBannerStyle = () => {
@@ -90,8 +93,10 @@ export default function HomePage() {
         return 'bg-amber-300 text-amber-950';
       case 'BAHAYA':
         return 'bg-rose-400 text-rose-950';
-      default:
+      case 'AMAN':
         return 'bg-[#6ee7b7] text-emerald-950';
+      default:
+        return 'bg-slate-100 text-slate-800 border border-slate-200';
     }
   };
 
@@ -212,7 +217,7 @@ export default function HomePage() {
 
               <div className="flex items-center gap-2 font-extrabold">
                 <Droplet className="h-6 w-6 fill-current shrink-0" />
-                <span className="text-xl sm:text-2xl">{waterLevelMeters.toFixed(2)} m</span>
+                <span className="text-xl sm:text-2xl">{waterLevelMeters !== null ? `${waterLevelMeters.toFixed(2)} m` : '-'}</span>
               </div>
 
               <span className="text-base sm:text-lg font-extrabold tracking-wider">

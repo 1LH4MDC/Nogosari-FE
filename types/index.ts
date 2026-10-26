@@ -24,7 +24,6 @@ export interface SensorReading {
   status_siaga: 'Aman' | 'Waspada' | 'Siaga' | 'Bahaya' | string;
   timestamp: string;
   nama_lokasi?: string;
-  is_demo?: boolean;
 }
 
 export interface SensorDevice {

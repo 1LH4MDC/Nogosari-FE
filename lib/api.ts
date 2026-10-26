@@ -34,36 +34,7 @@ export function invalidateCache(key?: string) {
   else _cache.clear();
 }
 
-function createDemoSensorHistory(limit = 100): SensorReading[] {
-  const now = Date.now();
-  const oneHour = 60 * 60 * 1000;
-  const sevenDays = 7 * 24 * oneHour;
 
-  return Array.from({ length: limit }, (_, index) => {
-    const age = index < 6
-      ? index * 10 * 60 * 1000
-      : oneHour + (index - 5) * ((sevenDays - oneHour) / Math.max(1, limit - 6));
-    const timestamp = now - age;
-    const dayCycle = 45 * Math.sin((timestamp / (24 * oneHour)) * Math.PI * 2);
-    const shorterCycle = 18 * Math.sin((timestamp / (6 * oneHour)) * Math.PI * 2);
-    const reading = 350 + dayCycle + shorterCycle;
-
-    return {
-      id: -(index + 1),
-      id_sensor: 'SN-001',
-      nilai_ketinggian: Number(reading.toFixed(1)),
-      satuan: 'cm',
-      status_siaga: reading > 600 ? 'Bahaya' : reading > 400 ? 'Siaga' : 'Aman',
-      timestamp: new Date(timestamp).toISOString(),
-      nama_lokasi: 'Sungai Nogosari Utama',
-      is_demo: true,
-    };
-  });
-}
-
-function createDemoLatestReading(): SensorReading {
-  return createDemoSensorHistory(1)[0];
-}
 
 // Helper to get auth header from localStorage
 function getAuthHeaders() {
@@ -106,12 +77,12 @@ export async function getLatestSensorReading(): Promise<SensorReading | null> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/sensor/latest`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Gagal mengambil data sensor terbaru');
-    const data: SensorReading & { message?: string } = await res.json();
-    if (data.message || data.nilai_ketinggian === undefined) return createDemoLatestReading();
+    const data: (SensorReading & { message?: string }) = await res.json();
+    if (data.message || data.nilai_ketinggian === undefined) return null;
     return data;
   } catch (error) {
     console.error('getLatestSensorReading Error:', error);
-    return createDemoLatestReading();
+    return null;
   }
 }
 
@@ -121,10 +92,10 @@ export async function getSensorHistory(limit = 50): Promise<SensorReading[]> {
     if (!res.ok) throw new Error('Gagal mengambil riwayat sensor');
     const data = await res.json();
     const readings: SensorReading[] = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
-    return readings.length > 0 ? readings : createDemoSensorHistory(limit);
+    return readings;
   } catch (error) {
     console.error('getSensorHistory Error:', error);
-    return createDemoSensorHistory(limit);
+    return [];
   }
 }
 
