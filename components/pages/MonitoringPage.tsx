@@ -10,32 +10,6 @@ import {
 } from 'recharts';
 import { getLatestSensorReading, getSensorHistory } from '@/lib/api';
 
-const chartData24h = [
-  { time: '00:00', level: 3.6 },
-  { time: '06:00', level: 3.4 },
-  { time: '12:00', level: 3.5 },
-  { time: '18:00', level: 2.8 },
-  { time: 'Sekarang', level: 3.45 },
-];
-
-const chartData1h = [
-  { time: '14:00', level: 3.45 },
-  { time: '14:10', level: 3.48 },
-  { time: '14:20', level: 3.46 },
-  { time: '14:30', level: 3.44 },
-  { time: 'Sekarang', level: 3.45 },
-];
-
-const chartData7d = [
-  { time: 'Sen', level: 3.6 },
-  { time: 'Sel', level: 3.4 },
-  { time: 'Rab', level: 3.2 },
-  { time: 'Kam', level: 2.6 },
-  { time: 'Jum', level: 3.1 },
-  { time: 'Sab', level: 3.5 },
-  { time: 'Ming', level: 3.45 },
-];
-
 interface LogItem {
   id: string;
   time: string;
@@ -77,7 +51,7 @@ export default function MonitoringPage() {
   const [activeTab, setActiveTab] = useState<'1Jam' | '1Hari' | '7Hari'>('1Hari');
   const [waterLevelCm, setWaterLevelCm] = useState<number | null>(null);
   const [isDeviceOnline, setIsDeviceOnline] = useState<boolean>(false);
-  const [lastUpdated, setLastUpdated] = useState<string>('Menghubungkan ke Backend...');
+  const [lastUpdated, setLastUpdated] = useState<string>('Menghubungkan ke Server...');
   const [historyData, setHistoryData] = useState<HistoryDataItem[]>([]);
   const [logs, setLogs] = useState<LogItem[]>([]);
   const [isMounted, setIsMounted] = useState(false);

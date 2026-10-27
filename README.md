@@ -57,7 +57,6 @@ Halaman `/monitoring` mengambil bacaan terbaru dan riwayat dari endpoint sensor 
 
 Pada batas tepat 4 m, status ditampilkan sebagai Aman. Status Siaga berlaku di atas 4 m hingga 6 m.
 
-
 ## Scripts
 
 | Perintah        | Keterangan                                     |
